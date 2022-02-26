@@ -1,0 +1,18 @@
+{
+    "domain": "Ewii",
+    "name": "Ewii",
+    "version": "0.3.0",
+    "config_flow": true,
+    "documentation": "https://github.com/raakilde/hacs_addon",
+    "issue_tracker": "https://github.com/raakilde/hacs_addon/issues",
+    "requirements": [
+      "requests==2.22.0"
+    ],
+    "ssdp": [],
+    "zeroconf": [],
+    "homekit": {},
+    "dependencies": [],
+    "codeowners": [
+      "@raakilde"
+    ]
+  }

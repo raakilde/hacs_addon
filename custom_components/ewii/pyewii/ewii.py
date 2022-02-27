@@ -45,7 +45,7 @@ data_login = {
     'scAction': 'EmailLogin',
     # Set user/pass
     'Email': 'j.olesen@vindinggaard.dk',
-    'Password': 'ithooriLoo12'
+    'Password': 'pass'
 }
 
 # urlCSV = https://selvbetjening.ewii.com/api/consumption/csv?installationNumber=114780&consumerNumber=2&meterId=4&counterId=1&type=2&utility=0&unit=KWH&factoryNumber=56048087

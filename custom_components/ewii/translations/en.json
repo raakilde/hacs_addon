@@ -1,0 +1,16 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "username": "User name",
+                    "password": "Password",
+                    "supplierid": "Supplier ID",
+                    "billing_period_skew": "Billing July to June?"
+                },
+                "title": "Enter username, password and supplier id"
+            }
+        },
+        "title": "Eforsyning"
+    }
+}

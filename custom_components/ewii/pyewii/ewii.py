@@ -41,7 +41,7 @@ data_login = {
     'scAction': 'EmailLogin',
     # Set user/pass
     'Email': 'j.olesen@vindinggaard.dk',
-    'Password': 'pass'
+    'Password': '!q2w3e4r'
 }
 
 #
@@ -83,6 +83,7 @@ params_datapoints = {
 session1 = requests.session()
 post = session1.post(url_login, data=data_login)
 req = session1.get(url_datapoints, params=params_datapoints)
+result_json = req.json()
 
 with requests.Session() as session:
     post = session.post(url_login, data=data_login)

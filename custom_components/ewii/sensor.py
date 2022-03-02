@@ -1,4 +1,4 @@
-"""Platform for Eforsyning sensor integration."""
+"""Platform for Ewii sensor integration."""
 import logging
 import datetime
 from homeassistant.const import (TEMP_CELSIUS,
@@ -8,8 +8,8 @@ from homeassistant.const import (TEMP_CELSIUS,
 from homeassistant.components.sensor import (SensorEntity, STATE_CLASS_MEASUREMENT, STATE_CLASS_TOTAL,
                                             STATE_CLASS_TOTAL_INCREASING)
 #from homeassistant.helpers.entity import Entity
-from custom_components.eforsyning.pyeforsyning.eforsyning import Eforsyning
-from custom_components.eforsyning.pyeforsyning.models import TimeSeries
+from custom_components.ewii.pyewii.ewii import Ewii
+from custom_components.ewii.pyewii.models import TimeSeries
 
 _LOGGER = logging.getLogger(__name__)
 from .const import DOMAIN
@@ -19,7 +19,7 @@ from .const import DOMAIN
 async def async_setup_entry(hass, config, async_add_entities):
     """Set up the sensor platform."""
     
-    eforsyning = hass.data[DOMAIN][config.entry_id]
+    ewii = hass.data[DOMAIN][config.entry_id]
 
     ## Sensors so far
     # Year, Month, Day? We'll fetch data once per day.
@@ -66,19 +66,19 @@ async def async_setup_entry(hass, config, async_add_entities):
     sensors = []
 
     for s in temp_series:
-        sensors.append(EforsyningEnergy(f"Eforsyning Water Temperature {s}", s, "temp", eforsyning))
+        sensors.append(EwiiEnergy(f"Ewii Water Temperature {s}", s, "temp", ewii))
 
     for s in energy_series:
-        sensors.append(EforsyningEnergy(f"Eforsyning Energy {s}", s, "energy", eforsyning))
+        sensors.append(EwiiEnergy(f"Ewii Energy {s}", s, "energy", ewii))
 
     for s in energy_series:
-        sensors.append(EforsyningEnergy(f"Eforsyning Water {s}", s, "water", eforsyning))
+        sensors.append(EwiiEnergy(f"Ewii Water {s}", s, "water", ewii))
 
-    #sensors.append(EforsyningEnergy("", "", eforsyning))
+    #sensors.append(EwiiEnergy("", "", ewii))
     async_add_entities(sensors)
 
 
-class EforsyningEnergy(SensorEntity):
+class EwiiEnergy(SensorEntity):
     """Representation of a Sensor."""
 
     def __init__(self, name, sensor_point, sensor_type, client):
@@ -90,7 +90,7 @@ class EforsyningEnergy(SensorEntity):
         self._attr_name = name
 
         self._sensor_value = f"{sensor_type}-{sensor_point}"
-        self._attr_unique_id = f"eforsyning-{self._sensor_value}"
+        self._attr_unique_id = f"ewii-{self._sensor_value}"
         if sensor_type == "energy":
             self._attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
             self._attr_icon = "mdi:lightning-bolt-circle"

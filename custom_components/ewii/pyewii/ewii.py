@@ -11,7 +11,7 @@ class Eforsyning:
         '''
         Get latest data.
         '''
-        _LOGGER.debug(f"Getting latest data")
+        # _LOGGER.debug(f"Getting latest data")
 
 # copied from curl
 url_login = 'https://selvbetjening.ewii.com/Login'

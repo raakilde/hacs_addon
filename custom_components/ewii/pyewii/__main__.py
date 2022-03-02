@@ -3,7 +3,7 @@ Main for pyeforsyning
 '''
 import argparse
 import logging
-from . import Ewii
+from . import ewii
 
 def main():
     '''
@@ -19,7 +19,7 @@ def main():
     _configureLogging(args)
 
     # TODO Get data
-    result = Eforsyning(args.refresh_token).get_latest(args.metering_point)
+    result = ewii(args.refresh_token).get_latest(args.metering_point)
     if result.status == 200:
         total = 0
         _LOGGER.debug(f"Date: {result.data_date}")

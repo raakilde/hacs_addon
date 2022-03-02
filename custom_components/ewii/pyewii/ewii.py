@@ -6,6 +6,9 @@ class Eforsyning:
     '''
     Primary exported interface for eforsyning.dk API wrapper.
     '''
+    def __init__(self, email, password):
+        self._email = email
+        self._password = password
 
     def get_latest(self):
         '''

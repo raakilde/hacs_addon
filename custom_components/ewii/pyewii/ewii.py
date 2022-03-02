@@ -2,6 +2,17 @@ from aiohttp import request
 from async_timeout import timeout
 import requests
 
+class Eforsyning:
+    '''
+    Primary exported interface for eforsyning.dk API wrapper.
+    '''
+
+    def get_latest(self):
+        '''
+        Get latest data.
+        '''
+        _LOGGER.debug(f"Getting latest data")
+
 # copied from curl
 url_login = 'https://selvbetjening.ewii.com/Login'
 data_login = {

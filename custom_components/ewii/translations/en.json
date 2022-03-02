@@ -6,7 +6,7 @@
                     "email": "Email",
                     "password": "Password"
                 },
-                "title": "Enter username and password"
+                "title": "Enter email and password"
             }
         },
         "title": "EWII"

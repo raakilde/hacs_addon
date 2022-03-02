@@ -11,10 +11,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
-        "username": str,
+        "email": str,
         "password": str,
-        "supplierid": str,
-        "billing_period_skew": bool
     }
 )
 
@@ -29,13 +27,13 @@ async def validate_input(hass: core.HomeAssistant, data):
     # If your PyPI package is not built with async, pass your methods
     # to the executor:
     # await hass.async_add_executor_job(
-    #     your_validate_func, data["username"], data["password"]
+    #     your_validate_func, data["email"], data["password"]
     # )
 
     
     hub = PlaceholderHub(data["host"])
 
-    if not await hub.authenticate(data["username"], data["password"]):
+    if not await hub.authenticate(data["email"], data["password"]):
         raise InvalidAuth
 
     # If you cannot connect:

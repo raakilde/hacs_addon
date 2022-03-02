@@ -1,3 +1,3 @@
-"""Constants for the Eforsyning integration."""
+"""Constants for the EWII integration."""
 
-DOMAIN = "eforsyning"
+DOMAIN = "ewii"

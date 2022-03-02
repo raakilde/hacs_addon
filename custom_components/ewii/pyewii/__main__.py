@@ -3,13 +3,13 @@ Main for pyeforsyning
 '''
 import argparse
 import logging
-from . import Eforsyning
+from . import Ewii
 
 def main():
     '''
     Main method
     '''
-    parser = argparse.ArgumentParser("pyeforsyning")
+    parser = argparse.ArgumentParser("pyewii")
     parser.add_argument("--log", action="store", required=False)
     parser.add_argument("--refresh-token", action="store", required=True)
     parser.add_argument('--metering-point', action='store', required=True)
@@ -18,6 +18,7 @@ def main():
 
     _configureLogging(args)
 
+    # TODO Get data
     result = Eforsyning(args.refresh_token).get_latest(args.metering_point)
     if result.status == 200:
         total = 0

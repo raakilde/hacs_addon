@@ -1,18 +1,15 @@
 {
-    "domain": "Ewii",
+    "domain": "ewii",
     "name": "Ewii",
-    "version": "0.3.0",
+    "version": "0.3.1",
     "config_flow": true,
     "documentation": "https://github.com/raakilde/hacs_addon",
     "issue_tracker": "https://github.com/raakilde/hacs_addon/issues",
-    "requirements": [
-      "requests==2.22.0"
-    ],
+    "requirements": ["requests==2.22.0"],
     "ssdp": [],
     "zeroconf": [],
     "homekit": {},
     "dependencies": [],
-    "codeowners": [
-      "@raakilde"
-    ]
+    "codeowners": ["@raakilde"],
+    "iot_class": "cloud_polling" 
   }

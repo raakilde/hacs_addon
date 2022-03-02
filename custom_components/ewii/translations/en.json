@@ -3,14 +3,12 @@
         "step": {
             "user": {
                 "data": {
-                    "username": "User name",
-                    "password": "Password",
-                    "supplierid": "Supplier ID",
-                    "billing_period_skew": "Billing July to June?"
+                    "email": "Email",
+                    "password": "Password"
                 },
-                "title": "Enter username, password and supplier id"
+                "title": "Enter username and password"
             }
         },
-        "title": "Eforsyning"
+        "title": "EWII"
     }
 }

@@ -1,7 +1,7 @@
 '''
-Init file for pyeforsyning
+Init file for pyewii
 '''
-from .eforsyning import Eforsyning
+from .ewii import Ewii
 from .models import TimeSeries
 from .models import RawResponse
 

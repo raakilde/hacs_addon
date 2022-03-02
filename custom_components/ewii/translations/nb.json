@@ -3,14 +3,12 @@
         "step": {
             "user": {
                 "data": {
-                    "username": "Brugernavn",
-                    "password": "Kodeord",
-                    "supplierid": "Leverandør ID",
-                    "billing_period_skew": "Afregning Juli til Juni?"
+                    "email": "Email",
+                    "password": "Kodeord"
                 },
-                "title": "Angiv brugernavn, kodeord og leverandør ID"
+                "title": "Angiv email og kodeord"
             }
         },
-        "title": "Eforsyning"
+        "title": "EWII"
     }
 }

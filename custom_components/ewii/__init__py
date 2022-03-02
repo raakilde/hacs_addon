@@ -1,4 +1,4 @@
-"""The Eforsyning integration."""
+"""The EWII integration."""
 import asyncio
 import logging
 import sys

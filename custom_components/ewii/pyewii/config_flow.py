@@ -42,8 +42,8 @@ async def validate_input(hass: core.HomeAssistant, data):
     # InvalidAuth
 
     # Return info that you want to store in the config entry.
-    supplierid = data["supplierid"]
-    return {"title": f"Ewii {supplierid}"}
+    # supplierid = data["supplierid"]
+    return {"title": f"Ewii"}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -60,9 +60,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 #info = await validate_input(self.hass, user_input)
-                supplierid = user_input["supplierid"]
+                # supplierid = user_input["supplierid"]
                 #billing_period_skew = user_input["billing_period_skew"]
-                info = f"Ewii {supplierid}"
+                info = f"Ewii"
                 return self.async_create_entry(title=info, data=user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"

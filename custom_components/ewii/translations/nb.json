@@ -6,9 +6,9 @@
                     "email": "Email",
                     "password": "Kodeord"
                 },
-                "title": "Angiv email og kodeord"
+                "title": "Angiv brugernavn og kodeord"
             }
         },
-        "title": "EWII"
+        "title": "Ewii"
     }
 }

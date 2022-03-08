@@ -3,12 +3,12 @@
         "step": {
             "user": {
                 "data": {
-                    "email": "Email",
+                    "email": "Enter Email",
                     "password": "Password"
                 },
-                "title": "Enter email and password"
+                "title": "Enter username and password"
             }
         },
-        "title": "EWII"
+        "title": "Ewii"
     }
 }

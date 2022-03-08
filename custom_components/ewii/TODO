@@ -1,0 +1,28 @@
+GUI login
+Save credentials
+- email
+- password
+Detect Heat, water or power
+pull every day
+Parse data and convert to sensor
+
+<h3 class="clearfix ng-binding">
+                    El <i class="icon icon-utility"></i>
+                    <!-- ngIf: element.Product.Navn && element.ShowGraph --><small ng-if="element.Product.Navn &amp;&amp; element.ShowGraph" class="ng-scope">
+                        <span>Produkt:</span>
+                        <span class="ng-binding">Grøn Standard</span>
+                    </small><!-- end ngIf: element.Product.Navn && element.ShowGraph -->
+                </h3>
+<<pseudo>></<pseudo>>
+
+                    El 
+<i class="icon icon-utility"></i>
+
+<h3 class="clearfix ng-binding">
+    Vand <i class="icon icon-utility"></i>
+    <!-- ngIf: element.Product.Navn && element.ShowGraph -->
+</h3>
+<<pseudo>></<pseudo>>
+
+    Vand 
+<i class="icon icon-utility"></i>

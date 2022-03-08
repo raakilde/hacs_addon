@@ -1,25 +1,33 @@
 """Platform for Ewii sensor integration."""
 import logging
 import datetime
-from homeassistant.const import (TEMP_CELSIUS,
-                                 DEVICE_CLASS_ENERGY, DEVICE_CLASS_TEMPERATURE,
-                                 DEVICE_CLASS_GAS,
-                                 ENERGY_KILO_WATT_HOUR, VOLUME_CUBIC_METERS)
-from homeassistant.components.sensor import (SensorEntity, STATE_CLASS_MEASUREMENT, STATE_CLASS_TOTAL,
-                                            STATE_CLASS_TOTAL_INCREASING)
-#from homeassistant.helpers.entity import Entity
-from custom_components.ewii.pyewii.ewii import Ewii
-from custom_components.ewii.pyewii.models import TimeSeries
+from homeassistant.const import (
+    TEMP_CELSIUS,
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_GAS,
+    ENERGY_KILO_WATT_HOUR,
+    VOLUME_CUBIC_METERS,
+)
+from homeassistant.components.sensor import (
+    SensorEntity,
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL,
+    STATE_CLASS_TOTAL_INCREASING,
+)
+
+# from homeassistant.helpers.entity import Entity
+from custom_components.ewii.pyeforsyning.eforsyning import Eforsyning
+from custom_components.ewii.pyeforsyning.models import TimeSeries
 
 _LOGGER = logging.getLogger(__name__)
 from .const import DOMAIN
 
 
-
 async def async_setup_entry(hass, config, async_add_entities):
     """Set up the sensor platform."""
-    
-    ewii = hass.data[DOMAIN][config.entry_id]
+
+    eforsyning = hass.data[DOMAIN][config.entry_id]
 
     ## Sensors so far
     # Year, Month, Day? We'll fetch data once per day.
@@ -66,19 +74,25 @@ async def async_setup_entry(hass, config, async_add_entities):
     sensors = []
 
     for s in temp_series:
-        sensors.append(EwiiEnergy(f"Ewii Water Temperature {s}", s, "temp", ewii))
+        sensors.append(
+            EforsyningEnergy(f"Eforsyning Water Temperature {s}", s, "temp", eforsyning)
+        )
 
     for s in energy_series:
-        sensors.append(EwiiEnergy(f"Ewii Energy {s}", s, "energy", ewii))
+        sensors.append(
+            EforsyningEnergy(f"Eforsyning Energy {s}", s, "energy", eforsyning)
+        )
 
     for s in energy_series:
-        sensors.append(EwiiEnergy(f"Ewii Water {s}", s, "water", ewii))
+        sensors.append(
+            EforsyningEnergy(f"Eforsyning Water {s}", s, "water", eforsyning)
+        )
 
-    #sensors.append(EwiiEnergy("", "", ewii))
+    # sensors.append(EforsyningEnergy("", "", eforsyning))
     async_add_entities(sensors)
 
 
-class EwiiEnergy(SensorEntity):
+class EforsyningEnergy(SensorEntity):
     """Representation of a Sensor."""
 
     def __init__(self, name, sensor_point, sensor_type, client):
@@ -95,12 +109,12 @@ class EwiiEnergy(SensorEntity):
             self._attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
             self._attr_icon = "mdi:lightning-bolt-circle"
             self._attr_device_class = DEVICE_CLASS_ENERGY
-            self._attr_state_class = STATE_CLASS_MEASUREMENT #STATE_CLASS_TOTAL_INCREASING or STATE_CLASS_TOTAL
-            #self._attr_last_reset = datetime.datetime(2000, 1, 1, 0, 0, 0) #JSON: "2000-01-01T00:00:00"
+            self._attr_state_class = STATE_CLASS_MEASUREMENT  # STATE_CLASS_TOTAL_INCREASING or STATE_CLASS_TOTAL
+            # self._attr_last_reset = datetime.datetime(2000, 1, 1, 0, 0, 0) #JSON: "2000-01-01T00:00:00"
         elif sensor_type == "water":
             self._attr_native_unit_of_measurement = VOLUME_CUBIC_METERS
             self._attr_icon = "mdi:water"
-            self._attr_state_class = STATE_CLASS_MEASUREMENT #STATE_CLASS_TOTAL
+            self._attr_state_class = STATE_CLASS_MEASUREMENT  # STATE_CLASS_TOTAL
             # Only gas can be measured in m3
             self._attr_device_class = DEVICE_CLASS_GAS
         else:
@@ -113,8 +127,8 @@ class EwiiEnergy(SensorEntity):
     def extra_state_attributes(self):
         """Return extra state attributes."""
         attributes = dict()
-        attributes['Metering date'] = self._data_date
-        attributes['metering_date'] = self._data_date
+        attributes["Metering date"] = self._data_date
+        attributes["metering_date"] = self._data_date
         return attributes
 
     def update(self):
@@ -123,8 +137,10 @@ class EwiiEnergy(SensorEntity):
         """
         _LOGGER.debug(f"Setting status for {self._attr_name}")
 
-        self._data.update()        
+        self._data.update()
 
         self._data_date = self._data.get_data_date()
         self._attr_native_value = self._data.get_data(self._sensor_value)
-        _LOGGER.debug(f"Done setting status for {self._attr_name} = {self._attr_native_value} {self._attr_native_unit_of_measurement}")
+        _LOGGER.debug(
+            f"Done setting status for {self._attr_name} = {self._attr_native_value} {self._attr_native_unit_of_measurement}"
+        )

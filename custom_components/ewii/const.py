@@ -1,3 +1,3 @@
-"""Constants for the EWII integration."""
+"""Constants for the Ewii integration."""
 
 DOMAIN = "ewii"

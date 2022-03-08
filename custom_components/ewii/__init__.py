@@ -10,7 +10,7 @@ from datetime import timedelta
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from custom_components.ewii.pyeforsyning.eforsyning import Eforsyning
+from config.custom_components.ewii.pyewii.ewii import Ewii
 
 from .const import DOMAIN
 
@@ -36,11 +36,11 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Set up Eforsyning from a config entry."""
+    """Set up Ewii from a config entry."""
     email = entry.data["email"]
     password = entry.data["password"]
 
-    hass.data[DOMAIN][entry.entry_id] = HassEforsyning(email, password)
+    hass.data[DOMAIN][entry.entry_id] = HassEwii(email, password)
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -66,14 +66,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return unload_ok
 
 
-class HassEforsyning:
+class HassEwii:
     def __init__(self, email, password):
-        self._client = Eforsyning(email, password)
+        self._client = Ewii(email, password)
 
         self._data = None
 
     def get_data(self, data_point):
-        """Get the sensor reading from the eforsyning library"""
+        """Get the sensor reading from the ewii library"""
         if self._data != None:
             return self._data.get_data_point(data_point)
         else:
@@ -87,20 +87,18 @@ class HassEforsyning:
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        _LOGGER.debug("Fetching data from Eforsyning")
+        _LOGGER.debug("Fetching data from Ewii")
 
         try:
             data = self._client.get_latest()
             if data.status == 200:
                 self._data = data
             else:
-                _LOGGER.warn(
-                    f"Error from eforsyning: {data.status} - {data.detailed_status}"
-                )
+                _LOGGER.warn(f"Error from ewii: {data.status} - {data.detailed_status}")
         except requests.exceptions.HTTPError as he:
             message = None
             if he.response.status_code == 401:
-                message = f"Unauthorized error while accessing eforsyning.dk. Wrong or expired refresh token?"
+                message = f"Unauthorized error while accessing ewii.dk. Wrong or expired refresh token?"
             else:
                 message = f"Exception: {e}"
 
@@ -109,4 +107,4 @@ class HassEforsyning:
             e = sys.exc_info()[0]
             _LOGGER.warn(f"Exception: {e}")
 
-        _LOGGER.debug("Done fetching data from Eforsyning")
+        _LOGGER.debug("Done fetching data from Ewii")

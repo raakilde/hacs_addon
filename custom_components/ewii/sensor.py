@@ -17,8 +17,8 @@ from homeassistant.components.sensor import (
 )
 
 # from homeassistant.helpers.entity import Entity
-from custom_components.ewii.pyeforsyning.eforsyning import Eforsyning
-from custom_components.ewii.pyeforsyning.models import TimeSeries
+from config.custom_components.ewii.pyewii.ewii import Ewii
+from custom_components.ewii.pyewii.models import TimeSeries
 
 _LOGGER = logging.getLogger(__name__)
 from .const import DOMAIN
@@ -27,7 +27,7 @@ from .const import DOMAIN
 async def async_setup_entry(hass, config, async_add_entities):
     """Set up the sensor platform."""
 
-    eforsyning = hass.data[DOMAIN][config.entry_id]
+    ewii = hass.data[DOMAIN][config.entry_id]
 
     ## Sensors so far
     # Year, Month, Day? We'll fetch data once per day.
@@ -74,25 +74,19 @@ async def async_setup_entry(hass, config, async_add_entities):
     sensors = []
 
     for s in temp_series:
-        sensors.append(
-            EforsyningEnergy(f"Eforsyning Water Temperature {s}", s, "temp", eforsyning)
-        )
+        sensors.append(EwiiEnergy(f"Ewii Water Temperature {s}", s, "temp", ewii))
 
     for s in energy_series:
-        sensors.append(
-            EforsyningEnergy(f"Eforsyning Energy {s}", s, "energy", eforsyning)
-        )
+        sensors.append(EwiiEnergy(f"Ewii Energy {s}", s, "energy", ewii))
 
     for s in energy_series:
-        sensors.append(
-            EforsyningEnergy(f"Eforsyning Water {s}", s, "water", eforsyning)
-        )
+        sensors.append(EwiiEnergy(f"Ewii Water {s}", s, "water", ewii))
 
-    # sensors.append(EforsyningEnergy("", "", eforsyning))
+    # sensors.append(EwiiEnergy("", "", ewii))
     async_add_entities(sensors)
 
 
-class EforsyningEnergy(SensorEntity):
+class EwiiEnergy(SensorEntity):
     """Representation of a Sensor."""
 
     def __init__(self, name, sensor_point, sensor_type, client):

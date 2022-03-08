@@ -1,25 +1,25 @@
-'''
-Main for pyeforsyning
-'''
+"""
+Main for pyewii
+"""
 import argparse
 import logging
-from . import ewii
+from . import Ewii
+
 
 def main():
-    '''
+    """
     Main method
-    '''
+    """
     parser = argparse.ArgumentParser("pyewii")
     parser.add_argument("--log", action="store", required=False)
     parser.add_argument("--refresh-token", action="store", required=True)
-    parser.add_argument('--metering-point', action='store', required=True)
+    parser.add_argument("--metering-point", action="store", required=True)
 
     args = parser.parse_args()
 
     _configureLogging(args)
 
-    # TODO Get data
-    result = ewii(args.refresh_token).get_latest(args.metering_point)
+    result = Ewii(args.refresh_token).get_latest(args.metering_point)
     if result.status == 200:
         total = 0
         _LOGGER.debug(f"Date: {result.data_date}")
@@ -30,15 +30,19 @@ def main():
 
         _LOGGER.debug(f"Total: {total} MWh")
     else:
-        _LOGGER.debug(f"Error getting data. Status: {result.status}. Error: {result.detailed_status}")
+        _LOGGER.debug(
+            f"Error getting data. Status: {result.status}. Error: {result.detailed_status}"
+        )
+
 
 def _configureLogging(args):
     if args.log:
         numeric_level = getattr(logging, args.log.upper(), None)
         if not isinstance(numeric_level, int):
-            raise ValueError('Invalid log level: %s' % args.log)
-        
+            raise ValueError("Invalid log level: %s" % args.log)
+
         logging.basicConfig(level=numeric_level)
+
 
 if __name__ == "__main__":
     main()

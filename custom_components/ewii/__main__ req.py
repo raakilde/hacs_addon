@@ -2,6 +2,7 @@
 # from http import cookies
 from email import header
 from http import cookies
+import json
 from httpx import head
 import pip._vendor.requests 
 import requests
@@ -100,14 +101,14 @@ class Ewii:
             'Content-Type': 'application/x-www-form-urlencoded',
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
         }
-        response_login = self._session.request("POST", url_login, headers=headers_login, data=payload_login.encode('utf-8'), allow_redirects=False)
+        response_login = self._session.post(url_login, headers=headers_login, data=payload_login.encode('utf-8'), allow_redirects=True)
 
         url_get_data = "https://selvbetjening.ewii.com/api/product/GetAddressPickerViewModel"
         payload_get_data = "false"
         headers_get_data = {
             'Content-Type': 'application/json;charset=UTF-8',
         }
-        response_get_data = self._session.request("POST", url_get_data, headers=headers_get_data, data=payload_get_data.encode('utf-8'))
+        response_get_data = self._session.post(url_get_data, headers=headers_get_data, data=payload_get_data.encode('utf-8'))
 
 
         url_set_data = "https://selvbetjening.ewii.com/api/product/SetSelectedAddressPickerElement"
@@ -117,13 +118,47 @@ class Ewii:
             'Accept': 'application/json, text/plain, */*',
             'Content-Type': 'application/json;charset=UTF-8',
         }
-        response_set_data = self._session.request("POST", url_set_data, headers=headers_set_data, data=payload_set_data.encode('utf-8'))
+        response_set_data = self._session.post(url_set_data, headers=headers_set_data, data=payload_set_data.encode('utf-8'))
 
         url_get_install = "https://selvbetjening.ewii.com/api/product/GetInstallationProducts"
         payload_get_install ={}
         headers_get_install = {
         }
-        response_get_install = self._session.request("POST", url_get_install, headers=headers_get_install, data=payload_get_install)
+        response_get_install = self._session.post(url_get_install, headers=headers_get_install, data=payload_get_install)
+        # print(json.dumps(json.loads(response_get_install.content), indent=2))
+
+        response_water = self._session.get("https://selvbetjening.ewii.com/api/consumption/meters?utility=Water")
+        response_electricity = self._session.get("https://selvbetjening.ewii.com/api/consumption/meters?utility=Electricity")
+        response_heat = self._session.get("https://selvbetjening.ewii.com/api/consumption/meters?utility=Heat")
+
+        print(json.dumps(json.loads(response_electricity.content), indent=2))
+
+        params = ( # el
+            ('installationNumber', '114780'),
+            ('consumerNumber', '2'),
+            ('meterId', '4'),
+            ('counterId', '1'),
+            ('type', '2'),
+            ('utility', '0'),
+            ('unit', 'KWH'),
+            ('factoryNumber', '56048087'),
+        )
+        response_data_el = self._session.get('https://selvbetjening.ewii.com/api/consumption/origin', params=params)
+
+        print(json.dumps(json.loads(response_water.content), indent=2))
+
+        params = (
+            ('installationNumber', '114780'),
+            ('consumerNumber', '2'),
+            ('meterId', '204'),
+            ('counterId', '1'),
+            ('type', '2'),
+            ('utility', '10'),
+            ('unit', 'm3'),
+            ('factoryNumber', '69343604'),
+        )
+
+        response_data_water = requests.get('https://selvbetjening.ewii.com/api/consumption/origin', params=params)
 
         return success
 

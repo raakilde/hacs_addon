@@ -1,6 +1,7 @@
 """Platform for Ewii sensor integration."""
 import logging
 import datetime
+
 from homeassistant.const import (
     TEMP_CELSIUS,
     DEVICE_CLASS_ENERGY,

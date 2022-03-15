@@ -24,7 +24,7 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 PLATFORMS = ["sensor"]
 
 # Every 6 hours seems appropriate to get an update ready in the morning
-MIN_TIME_BETWEEN_UPDATES = timedelta(hours=6)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 # Sure, let's bash the API service.. But useful when trying to get results fast.
 # MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
@@ -90,11 +90,13 @@ class HassEwii:
         _LOGGER.debug("Fetching data from Ewii")
 
         try:
-            data = self._client.get_latest()
-            if data.status == 200:
-                self._data = data
-            else:
-                _LOGGER.warn(f"Error from ewii: {data.status} - {data.detailed_status}")
+            self._client.login()
+            has_water_meter = self._client.is_water_meter_present
+            # data = self._client.get_latest()
+            # if data.status == 200:
+            #     self._data = data
+            # else:
+            #     _LOGGER.warn(f"Error from ewii: {data.status} - {data.detailed_status}")
         except requests.exceptions.HTTPError as he:
             message = None
             if he.response.status_code == 401:

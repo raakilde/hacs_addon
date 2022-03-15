@@ -1,9 +1,14 @@
 """
 Primary public module for ewii.dk API wrapper.
 """
+import requests
+
 from datetime import datetime
 from datetime import timedelta
+
+
 import json
+from pickle import FALSE
 import requests
 import logging
 import hashlib
@@ -15,6 +20,15 @@ import random
 
 _LOGGER = logging.getLogger(__name__)
 
+url_base_url = "https://selvbetjening.ewii.com"
+url_login = url_base_url + "/Login"
+data_login = {
+    "scController": "Auth",
+    "scAction": "EmailLogin",
+    "Email": "",
+    "Password": "",
+}
+
 
 class Ewii:
     """
@@ -24,14 +38,47 @@ class Ewii:
     def __init__(self, email, password):
         self._email = email
         self._password = password
-        self._base_url = "https://ewii.dk/"
-        self._api_server = ""
         ## Assume people only have a single metering device.
         ## Feel free to expand the code to find all metering devices
         ## and iterate over them.
         ## Must be a string - see where it is used.
         self._asset_id = "1"
         self._installation_id = "1"
+        self._session = requests.session()
+        self._has_water_meter = FALSE
+        self._has_electricity_meter = FALSE
+        self._has_heat_meter = FALSE
+
+    def login(self):
+
+        data_login["Email"] = self._email
+        data_login["Password"] = self._password
+        post = self._session.post(url_login, data=data_login)
+
+        contents = post.text
+        self._has_water_meter = contents.__contains__("/forsyning/vand")
+        self._has_electricity_meter = contents.__contains__("/forsyning/el")
+        self._has_heat_meter = contents.__contains__("/forsyning/varme")
+        success = text.__contains__("Mit overblik")
+        return success
+
+    def _is_water_meter_present(self):
+        return self._has_water_meter
+
+    def _get_water_meter_meta_data(self):
+        return FALSE
+
+    def _is_electricity_meter_present(self):
+        return self._has_electricity_meter
+
+    def _get_electricity_meter_meta_data(self):
+        return FALSE
+
+    def _is_heat_meter_present(self):
+        return self._has_heat_meter
+
+    def _get_heat_meter_meta_data(self):
+        return FALSE
 
     # def _get_ebrugerid(self, access_token):
     #     """
@@ -54,219 +101,219 @@ class Ewii:
 
     #     return result_json["id"]
 
-    def _get_intallations(self, access_token):
-        """
-        Get the installations to set installation_id and asset_id
-        Restriction:  We will find the first installation_id == 1 and
-        extract the asset_id from this only.
-        TODO: Consider enumeration of installations, or make a field in the
-        configuration to set the metering number, which is tied to the
-        installation_id and asset_id in the API.
-        This implementation is the path of least effort, so be warned about this.
-        """
-        # https://api2.dff-edb.dk/kongerslev/api/FindInstallationer?id=fec53bccc22d0d92a9ab7e439188bd3f
-        _LOGGER.debug(f"Getting installations at supplier: {self._supplierid}")
+    # def _get_intallations(self, access_token):
+    #     """
+    #     Get the installations to set installation_id and asset_id
+    #     Restriction:  We will find the first installation_id == 1 and
+    #     extract the asset_id from this only.
+    #     TODO: Consider enumeration of installations, or make a field in the
+    #     configuration to set the metering number, which is tied to the
+    #     installation_id and asset_id in the API.
+    #     This implementation is the path of least effort, so be warned about this.
+    #     """
+    #     # https://api2.dff-edb.dk/kongerslev/api/FindInstallationer?id=fec53bccc22d0d92a9ab7e439188bd3f
+    #     _LOGGER.debug(f"Getting installations at supplier: {self._supplierid}")
 
-        ebrugerid = self._get_ebrugerid(access_token)
+    #     ebrugerid = self._get_ebrugerid(access_token)
 
-        ## Get the URL to the REST API service
-        installationsURL = (
-            self._api_server + "api/FindInstallationer?id=" + access_token
-        )
-        _LOGGER.debug(f"Trying: {installationsURL}")
-        data = {
-            "Soegetekst": "",
-            "Skip": "0",
-            "Take": "10000",
-            "EBrugerId": ebrugerid,
-            "Huskeliste": "null",
-            "MedtagTilknyttede": "true",
-        }
+    #     ## Get the URL to the REST API service
+    #     installationsURL = (
+    #         self._api_server + "api/FindInstallationer?id=" + access_token
+    #     )
+    #     _LOGGER.debug(f"Trying: {installationsURL}")
+    #     data = {
+    #         "Soegetekst": "",
+    #         "Skip": "0",
+    #         "Take": "10000",
+    #         "EBrugerId": ebrugerid,
+    #         "Huskeliste": "null",
+    #         "MedtagTilknyttede": "true",
+    #     }
 
-        headers = self._create_headers()
+    #     headers = self._create_headers()
 
-        result = requests.post(
-            installationsURL, data=json.dumps(data), timeout=5, headers=headers
-        )
+    #     result = requests.post(
+    #         installationsURL, data=json.dumps(data), timeout=5, headers=headers
+    #     )
 
-        _LOGGER.debug(
-            f"Response from API. Status: {result.status_code}, Body: {result.text}"
-        )
+    #     _LOGGER.debug(
+    #         f"Response from API. Status: {result.status_code}, Body: {result.text}"
+    #     )
 
-        result_json = result.json()
-        # Data looks like this:
-        # {"Installationer":[
-        #  {"EjendomNr":<int>,
-        #   "Adresse":"<str>",
-        #   "InstallationNr":<int>,
-        #   "ForbrugerNr":"<int>",
-        #   "MålerNr":"<int>",
-        #   "By":"<str>",
-        #   "PostNr":"<int>",
-        #   "AktivNr":<int>,
-        #   "Målertype":"<str>"
-        #  }
-        # ]}
-        result_json = result.json()
-        installations = result_json["Installationer"][0]
-        self._installation_id = str(installations["InstallationNr"])
-        self._asset_id = str(installations["AktivNr"])
+    #     result_json = result.json()
+    #     # Data looks like this:
+    #     # {"Installationer":[
+    #     #  {"EjendomNr":<int>,
+    #     #   "Adresse":"<str>",
+    #     #   "InstallationNr":<int>,
+    #     #   "ForbrugerNr":"<int>",
+    #     #   "MålerNr":"<int>",
+    #     #   "By":"<str>",
+    #     #   "PostNr":"<int>",
+    #     #   "AktivNr":<int>,
+    #     #   "Målertype":"<str>"
+    #     #  }
+    #     # ]}
+    #     result_json = result.json()
+    #     installations = result_json["Installationer"][0]
+    #     self._installation_id = str(installations["InstallationNr"])
+    #     self._asset_id = str(installations["AktivNr"])
 
-        _LOGGER.debug(f"Done getting installatons[0] {installations}")
+    #     _LOGGER.debug(f"Done getting installatons[0] {installations}")
 
-        return installations
+    #     return installations
 
-    def _get_time_series(
-        self,
-        from_date=None,
-        to_date=None,
-        year="0",
-        month=False,
-        day=False,
-        include_expected_reading=True,
-    ):
-        """
-        Call time series API on eforsyning.dk. Defaults to yesterdays data.
-        NOTE: The API service actually don't care about the dates at this point in time.
-              Regardless of what we ask for, all data in the requested resolution
-              (Year, Monthly, Daily) is returned.  This means requesting daily data
-              will return a massive array of 365'is data points!
-        """
-        _LOGGER.debug(f"Getting time series")
+    # def _get_time_series(
+    #     self,
+    #     from_date=None,
+    #     to_date=None,
+    #     year="0",
+    #     month=False,
+    #     day=False,
+    #     include_expected_reading=True,
+    # ):
+    #     """
+    #     Call time series API on ewii.dk. Defaults to yesterdays data.
+    #     NOTE: The API service actually don't care about the dates at this point in time.
+    #           Regardless of what we ask for, all data in the requested resolution
+    #           (Year, Monthly, Daily) is returned.  This means requesting daily data
+    #           will return a massive array of 365'is data points!
+    #     """
+    #     _LOGGER.debug(f"Getting time series")
 
-        if from_date is None:
-            from_date = datetime.now() - timedelta(days=1)
-        if to_date is None:
-            to_date = datetime.now()
+    #     if from_date is None:
+    #         from_date = datetime.now() - timedelta(days=1)
+    #     if to_date is None:
+    #         to_date = datetime.now()
 
-        access_token = self._get_access_token()
+    #     access_token = self._get_access_token()
 
-        self._get_intallations(access_token)
+    #     self._get_intallations(access_token)
 
-        date_format = "%d-%m-%Y"
-        parsed_from_date = from_date.strftime(date_format)
-        parsed_to_date = to_date.strftime(date_format)
+    #     date_format = "%d-%m-%Y"
+    #     parsed_from_date = from_date.strftime(date_format)
+    #     parsed_to_date = to_date.strftime(date_format)
 
-        headers = self._create_headers()
+    #     headers = self._create_headers()
 
-        post_meter_data_url = (
-            "api/getforbrug?id="
-            + access_token
-            + "&unr="
-            + self._email
-            + "&anr="
-            + self._asset_id
-            + "&inr="
-            + self._installation_id
-        )  # POST
+    #     post_meter_data_url = (
+    #         "api/getforbrug?id="
+    #         + access_token
+    #         + "&unr="
+    #         + self._email
+    #         + "&anr="
+    #         + self._asset_id
+    #         + "&inr="
+    #         + self._installation_id
+    #     )  # POST
 
-        include_data_in_between = "false"
-        if month or day:
-            include_data_in_between = "true"
+    #     include_data_in_between = "false"
+    #     if month or day:
+    #         include_data_in_between = "true"
 
-        data_filter = "afMaanedsvis"
-        data_average = "false"
-        if day:
-            data_filter = "afDagsvis"
-            data_average = "true"
+    #     data_filter = "afMaanedsvis"
+    #     data_average = "false"
+    #     if day:
+    #         data_filter = "afDagsvis"
+    #         data_average = "true"
 
-        data_exp_read = "false"
-        if include_expected_reading:
-            data_exp_read = "true"
+    #     data_exp_read = "false"
+    #     if include_expected_reading:
+    #         data_exp_read = "true"
 
-        data = {
-            "Ejendomnr": self._email,
-            "AktivNr": self._asset_id,
-            "I_Nr": self._installation_id,
-            "AarsMaerke": year,
-            "ForbrugsAfgraensning_FraDato": parsed_from_date,
-            "ForbrugsAfgraensning_TilDato": parsed_to_date,
-            "ForbrugsAfgraensning_FraAflaesning": "0",
-            "ForbrugsAfgraensning_TilAflaesning": "2",
-            "ForbrugsAfgraensning_MedtagMellemliggendeMellemaflas": include_data_in_between,  ## true || false
-            "Optioner": "foBestemtBeboer, foSkabDetaljer, foMedtagWebAflaes",
-            "AHoejDetail": "false",  ## true || false
-            "Aflaesningsfilter": data_filter,  ## afMaanedsvis || afDagsvis || afUfiltreret
-            "AflaesningsFilterDag": "ULTIMO",
-            "AflaesningsUdjaevning": data_average,  ## true || false (Create interpolated data it seems)
-            "SletFiltreredeAflaesninger": "true",  ## true || false (Get rid of filtered data?)
-            "MedForventetForbrug": data_exp_read,  ## true || false (Include or exclude expected reading values)
-            "OmregnForbrugTilAktuelleEnhed": "true",  # true || false
-        }
+    #     data = {
+    #         "Ejendomnr": self._email,
+    #         "AktivNr": self._asset_id,
+    #         "I_Nr": self._installation_id,
+    #         "AarsMaerke": year,
+    #         "ForbrugsAfgraensning_FraDato": parsed_from_date,
+    #         "ForbrugsAfgraensning_TilDato": parsed_to_date,
+    #         "ForbrugsAfgraensning_FraAflaesning": "0",
+    #         "ForbrugsAfgraensning_TilAflaesning": "2",
+    #         "ForbrugsAfgraensning_MedtagMellemliggendeMellemaflas": include_data_in_between,  ## true || false
+    #         "Optioner": "foBestemtBeboer, foSkabDetaljer, foMedtagWebAflaes",
+    #         "AHoejDetail": "false",  ## true || false
+    #         "Aflaesningsfilter": data_filter,  ## afMaanedsvis || afDagsvis || afUfiltreret
+    #         "AflaesningsFilterDag": "ULTIMO",
+    #         "AflaesningsUdjaevning": data_average,  ## true || false (Create interpolated data it seems)
+    #         "SletFiltreredeAflaesninger": "true",  ## true || false (Get rid of filtered data?)
+    #         "MedForventetForbrug": data_exp_read,  ## true || false (Include or exclude expected reading values)
+    #         "OmregnForbrugTilAktuelleEnhed": "true",  # true || false
+    #     }
 
-        _LOGGER.debug(f"POST data to API. {data}")
+    #     _LOGGER.debug(f"POST data to API. {data}")
 
-        result = requests.post(
-            self._api_server + post_meter_data_url,
-            data=json.dumps(data),
-            timeout=5,
-            headers=headers,
-        )
+    #     result = requests.post(
+    #         self._api_server + post_meter_data_url,
+    #         data=json.dumps(data),
+    #         timeout=5,
+    #         headers=headers,
+    #     )
 
-        _LOGGER.debug(
-            f"Response from API. Status: {result.status_code}, Body: {result.text}"
-        )
+    #     _LOGGER.debug(
+    #         f"Response from API. Status: {result.status_code}, Body: {result.text}"
+    #     )
 
-        raw_response = RawResponse()
-        raw_response.status = result.status_code
-        raw_response.body = result.text
+    #     raw_response = RawResponse()
+    #     raw_response.status = result.status_code
+    #     raw_response.body = result.text
 
-        _LOGGER.debug(f"Done getting time series")
+    #     _LOGGER.debug(f"Done getting time series")
 
-        return raw_response
+    #     return raw_response
 
-    def _get_api_server(self):
-        _LOGGER.debug(f"Getting api server at supplier {self._supplierid}")
-        ## Get the URL to the REST API service
-        settingsURL = "/umbraco/dff/dffapi/GetVaerkSettings?forsyningid="
-        result = requests.get(self._base_url + settingsURL + self._supplierid)
-        result_json = result.json()
-        api_server = result_json["AppServerUri"]
+    # def _get_api_server(self):
+    #     _LOGGER.debug(f"Getting api server at supplier {self._supplierid}")
+    #     ## Get the URL to the REST API service
+    #     settingsURL = "/umbraco/dff/dffapi/GetVaerkSettings?forsyningid="
+    #     result = requests.get(self._base_url + settingsURL + self._supplierid)
+    #     result_json = result.json()
+    #     api_server = result_json["AppServerUri"]
 
-        _LOGGER.debug(f"Done getting api server {api_server}")
+    #     _LOGGER.debug(f"Done getting api server {api_server}")
 
-        return api_server
+    #     return api_server
 
-    def _get_access_token(self):
-        _LOGGER.debug(f"Getting access token")
+    # def _get_access_token(self):
+    #     _LOGGER.debug(f"Getting access token")
 
-        if self._api_server == "":
-            self._api_server = self._get_api_server()
+    #     if self._api_server == "":
+    #         self._api_server = self._get_api_server()
 
-        # With the API server URL we can authenticate and get a token:
-        security_token_url = (
-            self._api_server
-            + "system/getsecuritytoken/project/app/consumer/"
-            + self._email
-        )
-        result = requests.get(security_token_url)
-        result.raise_for_status()
-        result_json = result.json()
-        token = result_json["Token"]
-        ## TODO exception if token is '' (this happens if the username is invalid)
-        hashed_password = hashlib.md5(self._password.encode()).hexdigest()
-        crypt_string = hashed_password + token
-        access_token = hashlib.md5(crypt_string.encode()).hexdigest()
+    #     # With the API server URL we can authenticate and get a token:
+    #     security_token_url = (
+    #         self._api_server
+    #         + "system/getsecuritytoken/project/app/consumer/"
+    #         + self._email
+    #     )
+    #     result = requests.get(security_token_url)
+    #     result.raise_for_status()
+    #     result_json = result.json()
+    #     token = result_json["Token"]
+    #     ## TODO exception if token is '' (this happens if the username is invalid)
+    #     hashed_password = hashlib.md5(self._password.encode()).hexdigest()
+    #     crypt_string = hashed_password + token
+    #     access_token = hashlib.md5(crypt_string.encode()).hexdigest()
 
-        # Use the new token to login to the API service
-        auth_url = (
-            "system/login/project/app/consumer/" + self._email + "/installation/1/id/"
-        )
+    #     # Use the new token to login to the API service
+    #     auth_url = (
+    #         "system/login/project/app/consumer/" + self._email + "/installation/1/id/"
+    #     )
 
-        result = requests.get(self._api_server + auth_url + access_token)
-        result.raise_for_status()
-        result_json = result.json()
-        result_status = result_json["Result"]
-        if result_status == 1:
-            _LOGGER.debug("Login success")
-        else:
-            _LOGGER.debug("Login failed. Bye.")
+    #     result = requests.get(self._api_server + auth_url + access_token)
+    #     result.raise_for_status()
+    #     result_json = result.json()
+    #     result_status = result_json["Result"]
+    #     if result_status == 1:
+    #         _LOGGER.debug("Login success")
+    #     else:
+    #         _LOGGER.debug("Login failed. Bye.")
 
-        _LOGGER.debug(f"Got access token: {access_token}")
-        return access_token
+    #     _LOGGER.debug(f"Got access token: {access_token}")
+    #     return access_token
 
-    def _create_headers(self):
-        return {"Content-Type": "application/json", "Accept": "application/json"}
+    # def _create_headers(self):
+    #     return {"Content-Type": "application/json", "Accept": "application/json"}
 
     def get_latest(self):
         """

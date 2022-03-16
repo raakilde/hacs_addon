@@ -7,14 +7,13 @@ from urllib import response
 from httpx import head
 import pip._vendor.requests 
 import requests
-# from requests_html import HTMLSession
-
 
 url_base = "https://selvbetjening.ewii.com"
 url_login = url_base + "/Login"
 url_get_address = url_base + "/api/product/GetAddressPickerViewModel"
 url_set_address = url_base + "/api/product/SetSelectedAddressPickerElement"
 url_get_install = url_base + "/api/product/GetInstallationProducts"
+url_meter =url_base + "/api/consumption/meters?utility="
 
 # Login
 data_login = {
@@ -35,7 +34,6 @@ headers_get_address = {
 }
 
 # Set Address
-# payload_set_address = ""
 headers_set_address = {
     'Accept': 'application/json, text/plain, */*',
     'Content-Type': 'application/json;charset=UTF-8',
@@ -54,6 +52,7 @@ class Ewii:
         self._email = email
         self._password = password
         self._session = requests.session()
+        self._meters_type = []
         self._meters = []
 
     def login_and_prime(self):
@@ -81,58 +80,49 @@ class Ewii:
 
         # Detect installation
         for product in elements:
-            self._meter_types.append(product['ProductTypeName'])
-            
+            self._meters_type.append(product['ProductTypeName'])
+            response = self._session.get(url_meter + product['ProductTypeName'])
+            self._meters.append(json.loads(response.content))
 
-        # response_water = self._session.get("https://selvbetjening.ewii.com/api/consumption/meters?utility=Water")
-        # response_electricity = self._session.get("https://selvbetjening.ewii.com/api/consumption/meters?utility=Electricity")
-        # response_heat = self._session.get("https://selvbetjening.ewii.com/api/consumption/meters?utility=Heat")
+        return  response_login.status_code          ==  200 and \
+                response_get_address.status_code    ==  200 and \
+                response_set_address.status_code    ==  204 and \
+                response_get_install.status_code    ==  200
 
+    def generate_report(self, meter_json_data):
+        params = (
+            ('monthOfYear', '1'),
+            ('installationNumber', meter_json_data["Installation"]["InstallationNumber"]),
+            ('consumerNumber', meter_json_data["Installation"]["ConsumerNumber"]),
+            ('meterId', meter_json_data["MeterId"]),
+            ('counterId', meter_json_data["CounterId"]),
+            ('type', meter_json_data["ReadingType"]),
+            ('utility', meter_json_data["Utility"]),
+            ('unit', meter_json_data["Unit"]),
+            ('factoryNumber', meter_json_data["FactoryNumber"]),
+        )
         
-        # print(json.dumps(json.loads(response_electricity.content), indent=2))
+        consumption_days = self._session.get('https://selvbetjening.ewii.com/api/consumption/days', params=params)
+        return json.loads(consumption_days.content)
 
-        # params = ( # el
-        #     ('installationNumber', '114780'),
-        #     ('consumerNumber', '2'),
-        #     ('meterId', '4'),
-        #     ('counterId', '1'),
-        #     ('type', '2'),
-        #     ('utility', '0'),
-        #     ('unit', 'KWH'),
-        #     ('factoryNumber', '56048087'),
-        # )
-        # response_data_el = self._session.get('https://selvbetjening.ewii.com/api/consumption/origin', params=params)
+    def process_data(self, json_data_to_process, meter_type):
+        # Handle heat
+        # Handle water
+        # Handle electricity
+        print(json_data_to_process)
 
-        # print(json.dumps(json.loads(response_water.content), indent=2))
-
-        # params = (
-        #     ('installationNumber', '114780'),
-        #     ('consumerNumber', '2'),
-        #     ('meterId', '204'),
-        #     ('counterId', '1'),
-        #     ('type', '2'),
-        #     ('utility', '10'),
-        #     ('unit', 'm3'),
-        #     ('factoryNumber', '69343604'),
-        # )
-
-        # response_data_water = self._session.get('https://selvbetjening.ewii.com/api/consumption/origin', params=params)
-
-        return  response_login.status_code ==  200 and \
-                response_get_address.status_code ==  200 and \
-                response_set_address.status_code ==  204 and \
-                response_get_install.status_code ==  200
-
-    def detect_meters(self):
-
-        for type in self._meter_types:
-            # Get type
+    def generate_reports(self):
+        i = 0
+        for meter in self._meters:
+            # The first one is normally the active one
+            measurements = self.generate_report(meter[0])
+            self.process_data(measurements, self._meters_type[i])
+            i += 1
             
-
-            
-        return False
+        
 
 if __name__ == "__main__":
     ewii = Ewii("j.olesen@vindinggaard.dk", "fuzbyk-fyrbyK-2jeppy")
     ewii.login_and_prime()
-    ewii.detect_meters()
+    ewii.generate_reports()
+    # ewii.detect_meters()

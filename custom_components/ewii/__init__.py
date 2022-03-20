@@ -90,17 +90,15 @@ class HassEwii:
         _LOGGER.debug("Fetching data from Ewii")
 
         try:
-            self._client.login()
-            has_water_meter = self._client.is_water_meter_present
-            # data = self._client.get_latest()
-            # if data.status == 200:
-            #     self._data = data
-            # else:
-            #     _LOGGER.warn(f"Error from ewii: {data.status} - {data.detailed_status}")
+            data = self._client.get_latest()
+            if data.status == 200:
+                self._data = data
+            else:
+                _LOGGER.warn(f"Error from ewii: {data.status} - {data.detailed_status}")
         except requests.exceptions.HTTPError as he:
             message = None
             if he.response.status_code == 401:
-                message = f"Unauthorized error while accessing ewii.dk. Wrong or expired refresh token?"
+                message = f"Unauthorized error while accessing ewii.dk?"
             else:
                 message = f"Exception: {e}"
 

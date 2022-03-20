@@ -7,9 +7,10 @@ class RawMeterData:
     """
     Class representing JSON meter data
     """
-    def __init__(self, meter_type, measurement_data):
+    def __init__(self, meter_type, measurement_data, is_valid):
         self._meter_type = meter_type
         self._measurement_data = measurement_data
+        self._is_valid = is_valid
 
     @property
     def meter_type(self):
@@ -27,21 +28,28 @@ class RawMeterData:
     def meter_type(self, measurement_data):
         self._measurement_data = measurement_data
 
+    @property
+    def is_valid(self):
+        return self._is_valid
+
+    @is_valid.setter
+    def is_valid(self, is_valid):
+        self._is_valid = is_valid
 
 class TimeSeries:
     """
     Class representing a parsed time series data for a single day.
     """
 
-    def __init__(self, status, data_date, metering_data, detailed_status=None):
-        self._status = status
+    def __init__(self, id_valid, data_date, metering_data, detailed_status=None):
+        self._id_valid = id_valid
         self._data_date = data_date
         self._metering_data = metering_data
         self._detailed_status = detailed_status
 
     @property
-    def status(self):
-        return self._status
+    def id_valid(self):
+        return self._id_valid
 
     @property
     def detailed_status(self):

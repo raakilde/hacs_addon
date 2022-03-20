@@ -6,6 +6,8 @@ import logging
 from models import TimeSeries
 from models import RawMeterData
 
+
+
 _LOGGER = logging.getLogger(__name__)
 
 url_base = "https://selvbetjening.ewii.com"
@@ -89,8 +91,8 @@ class Ewii:
                 response_set_address.status_code    ==  204 and \
                 response_get_install.status_code    ==  200
 
-    def generate_report(self, meter_json_data):
-        _LOGGER.debug(f"Generate report")
+    def read_latest_measurement(self, meter_json_data):
+        _LOGGER.debug(f"Read latest measurement")
         params = (
             ('monthOfYear', datetime.now().month),
             ('installationNumber', meter_json_data["Installation"]["InstallationNumber"]),
@@ -104,23 +106,31 @@ class Ewii:
         )
         
         consumption_days = self._session.get('https://selvbetjening.ewii.com/api/consumption/days', params=params)
-        return json.loads(consumption_days.content)
+
+        if consumption_days.status_code == 200:
+            return json.loads(consumption_days.content)
+        
+        _LOGGER.debug(f"Read latest measurement failed with status {consumption_days.status_code}")
+        return ""
 
     def process_data(self, json_data_to_process, meter_type):
         _LOGGER.debug(f"Process report for {meter_type}")
         # Handle heat
         # Handle water
         # Handle electricity
-        raw_response = RawMeterData(meter_type, json_data_to_process)
+        raw_response = RawMeterData(meter_type, json_data_to_process, (json_data_to_process != ""))
         return raw_response
 
-    def generate_reports(self):
-        reports = {}
+    def read_latest_measurements(self):
+        reports = []
         i = 0
+        _LOGGER.debug(f"Generate repots")
+        #  _LOGGER.debug(f"Getting latest data")
+
         for meter in self._meters:
             # The first one is normally the active one
-            measurements = self.generate_report(meter[0])
-            reports[i] = self.process_data(self._meters_type[i], measurements)
+            raw_measurements = self.read_latest_measurement(meter[0])
+            reports.append(self.process_data(self._meters_type[i], raw_measurements))
             i += 1
             
         return reports
@@ -148,10 +158,3 @@ class Ewii:
 
     #     _LOGGER.debug(f"Done getting latest data")
     #     return result
-
-# if __name__ == "__main__":
-#     ewii = Ewii("j.olesen@vindinggaard.dk", "fuzbyk-fyrbyK-2jeppy")
-#     ewii.login_and_prime()
-#     raw_data = ewii.generate_reports()
-#     print(raw_data)
-#     # ewii.detect_meters()

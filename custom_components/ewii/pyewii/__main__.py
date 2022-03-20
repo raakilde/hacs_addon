@@ -3,7 +3,9 @@ Main for pyewii
 """
 import argparse
 import logging
+from xml.parsers.expat import model
 from ewii import Ewii
+from models import RawMeterData
 
 
 def main():
@@ -12,27 +14,22 @@ def main():
     """
     parser = argparse.ArgumentParser("pyewii")
     parser.add_argument("--log", action="store", required=False)
-    # parser.add_argument("--metering-point", action="store", required=True)
+    # parser.add_argument("--metering-point", action="store", required=False)
 
     args = parser.parse_args()
 
     _configureLogging(args)
 
-    result = Ewii("j.olesen@vindinggaard.dk", "fuzbyk-fyrbyK-2jeppy").get_latest(args.metering_point)
-    if result.status == 200:
-        total = 0
-        _LOGGER.debug(f"Date: {result.data_date}")
-        for hour in range(24):
-            data = result.get_metering_data(hour)
-            total += data
-            _LOGGER.debug(f"Hour {hour}-{hour+1}: {data} MWh")
+    ewii = Ewii("j.olesen@vindinggaard.dk", "fuzbyk-fyrbyK-2jeppy")
+    ewii.login_and_prime()
+    measurements = ewii.read_latest_measurements()
 
-        _LOGGER.debug(f"Total: {total} MWh")
-    else:
-        _LOGGER.debug(
-            f"Error getting data. Status: {result.status}. Error: {result.detailed_status}"
-        )
-
+    for measurement in measurements:
+        # The first one is normally the active one
+        if measurement.is_valid == True:
+            print(f"{measurement.meter_type} is valid")
+        else:
+            _LOGGER.debug(f"Error getting data. Status: {measurement.is_valid}. Error: {measurement.detailed_status}")
 
 def _configureLogging(args):
     if args.log:

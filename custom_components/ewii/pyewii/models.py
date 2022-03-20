@@ -3,26 +3,29 @@ All model classes for pyewii
 """
 
 
-class RawResponse:
+class RawMeterData:
     """
-    Class representing a raw response by http status code and http body.
+    Class representing JSON meter data
     """
+    def __init__(self, meter_type, measurement_data):
+        self._meter_type = meter_type
+        self._measurement_data = measurement_data
 
     @property
-    def status(self):
-        return self._status
+    def meter_type(self):
+        return self._meter_type
 
-    @status.setter
-    def status(self, status):
-        self._status = status
+    @meter_type.setter
+    def meter_type(self, meter_type):
+        self._meter_type = meter_type
 
     @property
-    def response(self):
-        return self._response
+    def measurement_data(self):
+        return self._measurement_data
 
-    @response.setter
-    def response(self, response):
-        self._response = response
+    @measurement_data.setter
+    def meter_type(self, measurement_data):
+        self._measurement_data = measurement_data
 
 
 class TimeSeries:

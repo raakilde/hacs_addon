@@ -18,7 +18,7 @@ from homeassistant.components.sensor import (
 )
 
 # from homeassistant.helpers.entity import Entity
-from config.custom_components.ewii.pyewii.ewii import Ewii
+from custom_components.ewii.pyewii.ewii import Ewii
 from custom_components.ewii.pyewii.models import TimeSeries
 
 _LOGGER = logging.getLogger(__name__)
@@ -70,18 +70,21 @@ async def async_setup_entry(hass, config, async_add_entities):
     #   TV2  - Consumption MWh
     # The daily datalog should only be one sensor reading.
     #
+    water_series = {"usage"}
     temp_series = {"forward", "return", "exp-return", "cooling"}
-    energy_series = {"start", "end", "used", "exp-used", "exp-end"}
+    energy_series = {"eltricity"}
     sensors = []
 
-    for s in temp_series:
-        sensors.append(EwiiEnergy(f"Ewii Water Temperature {s}", s, "temp", ewii))
-
-    for s in energy_series:
-        sensors.append(EwiiEnergy(f"Ewii Energy {s}", s, "energy", ewii))
-
-    for s in energy_series:
+    for s in water_series:
         sensors.append(EwiiEnergy(f"Ewii Water {s}", s, "water", ewii))
+    
+    for s in temp_series:
+        sensors.append(EwiiEnergy(f"Ewii Heat Temperature {s}", s, "temp", ewii))
+
+    for s in energy_series:
+        sensors.append(EwiiEnergy(f"Ewii Electricityr {s}", s, "energy", ewii))
+
+    # TODO set on detected features
 
     # sensors.append(EwiiEnergy("", "", ewii))
     async_add_entities(sensors)

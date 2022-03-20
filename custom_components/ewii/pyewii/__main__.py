@@ -3,7 +3,7 @@ Main for pyewii
 """
 import argparse
 import logging
-from . import Ewii
+from ewii import Ewii
 
 
 def main():
@@ -12,14 +12,13 @@ def main():
     """
     parser = argparse.ArgumentParser("pyewii")
     parser.add_argument("--log", action="store", required=False)
-    parser.add_argument("--refresh-token", action="store", required=True)
-    parser.add_argument("--metering-point", action="store", required=True)
+    # parser.add_argument("--metering-point", action="store", required=True)
 
     args = parser.parse_args()
 
     _configureLogging(args)
 
-    result = Ewii(args.refresh_token).get_latest(args.metering_point)
+    result = Ewii("j.olesen@vindinggaard.dk", "fuzbyk-fyrbyK-2jeppy").get_latest(args.metering_point)
     if result.status == 200:
         total = 0
         _LOGGER.debug(f"Date: {result.data_date}")

@@ -107,11 +107,11 @@ class Ewii:
         
         consumption_days = self._session.get('https://selvbetjening.ewii.com/api/consumption/days', params=params)
 
-        if consumption_days.status_code == 200:
-            return json.loads(consumption_days.content)
-        
-        _LOGGER.debug(f"Read latest measurement failed with status {consumption_days.status_code}")
-        return ""
+        if consumption_days.status_code != 200:
+            _LOGGER.debug(f"Read latest measurement failed with status {consumption_days.status_code}")
+            return ""
+
+        return json.loads(consumption_days.content)
 
     def process_data(self, json_data_to_process, meter_type):
         _LOGGER.debug(f"Process report for {meter_type}")
@@ -134,27 +134,3 @@ class Ewii:
             i += 1
             
         return reports
-
-    # def get_latest(self):
-    #     '''
-    #     Get latest data.
-    #     '''
-    #     _LOGGER.debug(f"Getting latest data")
-
-       
-    #     if raw_data.status == 200:
-    #         json_response = json.loads(raw_data.body)
-
-    #         r = self._parse_result(json_response)
-
-    #         keys = list(r.keys())
-
-    #         keys.sort()
-    #         keys.reverse()
-
-    #         result = r[keys[0]]
-    #     else:
-    #         result = TimeSeries(raw_data.status, None, None, raw_data.body)
-
-    #     _LOGGER.debug(f"Done getting latest data")
-    #     return result

@@ -10,7 +10,7 @@ from datetime import timedelta
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from config.custom_components.ewii.pyewii.ewii import Ewii
+from custom_components.ewii.pyewii.ewii import Ewii
 
 from .const import DOMAIN
 
@@ -90,11 +90,13 @@ class HassEwii:
         _LOGGER.debug("Fetching data from Ewii")
 
         try:
-            data = self._client.get_latest()
-            if data.status == 200:
-                self._data = data
-            else:
-                _LOGGER.warn(f"Error from ewii: {data.status} - {data.detailed_status}")
+            self._client.login_and_prime()
+            data = self._client.read_latest_measurements()
+            # data = self._client.get_latest()
+            # if data == 200:
+            #     self._data = data
+            # else:
+            #     _LOGGER.warn(f"Error from ewii: {data.status} - {data.detailed_status}")
         except requests.exceptions.HTTPError as he:
             message = None
             if he.response.status_code == 401:

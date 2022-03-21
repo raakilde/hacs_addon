@@ -1,3 +1,5 @@
+from argparse import ArgumentError
+from asyncio import exceptions
 from datetime import datetime
 import json
 import logging
@@ -113,13 +115,65 @@ class Ewii:
 
         return json.loads(consumption_days.content)
 
-    def process_data(self, json_data_to_process, meter_type):
+    def process_data(self, meter_type, json_data_to_process):
         _LOGGER.debug(f"Process report for {meter_type}")
+        metering_data = {}
+
+        if meter_type == "Electricity":
+            print(f"{meter_type}: Process data")
+        elif meter_type == "Heat":
+            print(f"{meter_type}: Process data")
+        else:
+            raise NotImplementedError(f"Not implemented {meter_type} with data {json_data_to_process}")
+
         # Handle heat
         # Handle water
         # Handle electricity
         raw_response = RawMeterData(meter_type, json_data_to_process, (json_data_to_process != ""))
+
         return raw_response
+
+    # def _parse_result(self, result):
+    #     '''
+    #     Parse result from API call. This is a JSON dict.
+    #     '''
+    #     _LOGGER.debug(f"Parsing results")
+    #     parsed_result = {}
+
+    #     metering_data = {}
+    #     metering_data['year_start'] = result['AarStart']
+    #     metering_data['year_end']   = result['AarSlut']
+    #     for fl in result['ForbrugsLinjer']['TForbrugsLinje']:
+    #         metering_data['temp-forward'] = self._stof(fl['Tempfrem'])
+    #         metering_data['temp-return'] = self._stof(fl['TempRetur'])
+    #         metering_data['temp-exp-return'] = self._stof(fl['Forv_Retur'])
+    #         metering_data['temp-cooling'] = self._stof(fl['Afkoling'])
+    #         for reading in fl['TForbrugsTaellevaerk']:
+    #             unit = reading['Enhed_Txt']
+    #             if reading['IndexNavn'] == "ENG1":
+    #                 #_LOGGER.debug(f"Energy use unit is: {unit}")
+    #                 multiplier = 1
+    #                 if unit == "MWh":
+    #                     multiplier = 1000
+    #                 metering_data['energy-start'] = self._stof(reading['Start']) * multiplier
+    #                 metering_data['energy-end'] = self._stof(reading['Slut']) * multiplier
+    #                 metering_data['energy-used'] = self._stof(reading['Forbrug']) * multiplier
+    #                 metering_data['energy-exp-used'] = self._stof(fl['ForventetForbrugENG1']) * multiplier
+    #                 metering_data['energy-exp-end'] = self._stof(fl['ForventetAflaesningENG1']) * multiplier
+    #             elif reading['IndexNavn'] == "M3":
+    #                 metering_data['water-start'] = self._stof(reading['Start'])
+    #                 metering_data['water-end'] = self._stof(reading['Slut'])
+    #                 metering_data['water-used'] = self._stof(reading['Forbrug'])
+    #                 metering_data['water-exp-used'] = self._stof(fl['ForventetForbrugM3'])
+    #                 metering_data['water-exp-end'] = self._stof(fl['ForventetAflaesningM3'])
+    #             else:
+    #                 metering_data['extra-start'] = self._stof(reading['Start'])
+    #                 metering_data['extra-end'] = self._stof(reading['Slut'])
+    #                 metering_data['extra-used'] = self._stof(reading['Forbrug'])
+
+    #     # Because we are fetching data from the full year (or so far)
+    #     # The date is generated internally to be todays day of course.
+    #     date = datetime.now()
 
     def read_latest_measurements(self):
         reports = []

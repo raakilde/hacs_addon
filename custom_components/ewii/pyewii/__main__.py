@@ -20,16 +20,19 @@ def main():
 
     _configureLogging(args)
 
-    ewii = Ewii("j.olesen@vindinggaard.dk", "fuzbyk-fyrbyK-2jeppy")
-    ewii.login_and_prime()
-    measurements = ewii.read_latest_measurements()
+    try:
+        ewii = Ewii("j.olesen@vindinggaard.dk", "fuzbyk-fyrbyK-2jeppy")
+        ewii.login_and_prime()
+        measurements = ewii.read_latest_measurements()
 
-    for measurement in measurements:
-        # The first one is normally the active one
-        if measurement.is_valid == True:
-            print(f"{measurement.meter_type} is valid")
-        else:
-            _LOGGER.debug(f"Error getting data. Status: {measurement.is_valid}. Error: {measurement.detailed_status}")
+        for measurement in measurements:
+            # The first one is normally the active one
+            if measurement.is_valid == True:
+                print(f"{measurement.meter_type} is valid")
+            else:
+                _LOGGER.debug(f"Error getting data. Status: {measurement.is_valid}. Error: {measurement.detailed_status}")
+    except Exception as e:
+        print(e.args[0])
 
 def _configureLogging(args):
     if args.log:

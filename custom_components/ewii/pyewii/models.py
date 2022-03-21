@@ -25,7 +25,7 @@ class RawMeterData:
         return self._measurement_data
 
     @measurement_data.setter
-    def meter_type(self, measurement_data):
+    def measurement_data(self, measurement_data):
         self._measurement_data = measurement_data
 
     @property

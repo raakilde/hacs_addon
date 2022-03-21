@@ -119,16 +119,17 @@ class Ewii:
         _LOGGER.debug(f"Process report for {meter_type}")
         metering_data = {}
 
+        # Handle electricity
         if meter_type == "Electricity":
-            print(f"{meter_type}: Process data")
-        elif meter_type == "Heat":
-            print(f"{meter_type}: Process data")
+            _LOGGER.debug((f"{meter_type}: Process data")
+        # Handle water
+        elif meter_type == "Water":
+            _LOGGER.debug((f"{meter_type}: Process data")
+        # Handle heat/other
         else:
+            _LOGGER.debug(f"Not implemented {meter_type} with data {json_data_to_process}")
             raise NotImplementedError(f"Not implemented {meter_type} with data {json_data_to_process}")
 
-        # Handle heat
-        # Handle water
-        # Handle electricity
         raw_response = RawMeterData(meter_type, json_data_to_process, (json_data_to_process != ""))
 
         return raw_response

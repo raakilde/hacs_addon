@@ -28,7 +28,7 @@ from .const import DOMAIN
 async def async_setup_entry(hass, config, async_add_entities):
     """Set up the sensor platform."""
 
-    ewii = hass.data[DOMAIN][config.entry_id]
+    hass_ewii = hass.data[DOMAIN][config.entry_id]
 
     ## Sensors so far
     # Year, Month, Day? We'll fetch data once per day.
@@ -70,19 +70,19 @@ async def async_setup_entry(hass, config, async_add_entities):
     #   TV2  - Consumption MWh
     # The daily datalog should only be one sensor reading.
     #
-    water_series = {"usage"}
-    temp_series = {"forward", "return", "exp-return", "cooling"}
-    energy_series = {"eltricity"}
+    water_series = {"usage", "total_current_year"}
+    heat_series = {"forward", "return", "exp-return", "cooling"}
+    electricity_series = {"usage, total_current_year"}
     sensors = []
 
     for s in water_series:
-        sensors.append(EwiiEnergy(f"Ewii Water {s}", s, "water", ewii))
+        sensors.append(EwiiEnergy(f"Ewii Water {s}", s, "water", hass_ewii))
     
-    for s in temp_series:
-        sensors.append(EwiiEnergy(f"Ewii Heat Temperature {s}", s, "temp", ewii))
+    for s in heat_series:
+        sensors.append(EwiiEnergy(f"Ewii Heat Temperature {s}", s, "temp", hass_ewii))
 
-    for s in energy_series:
-        sensors.append(EwiiEnergy(f"Ewii Electricityr {s}", s, "energy", ewii))
+    for s in electricity_series:
+        sensors.append(EwiiEnergy(f"Ewii Electricityr {s}", s, "energy", hass_ewii))
 
     # TODO set on detected features
 

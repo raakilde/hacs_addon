@@ -1,14 +1,16 @@
 from argparse import ArgumentError
 from asyncio import exceptions
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import logging
+from multiprocessing.dummy import Array
+from optparse import Values
+from xml.dom import NotFoundErr
+from pandas import Series
 import requests
 import logging
 from models import TimeSeries
 from models import RawMeterData
-
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,10 +95,11 @@ class Ewii:
                 response_set_address.status_code    ==  204 and \
                 response_get_install.status_code    ==  200
 
-    def read_latest_measurement(self, meter_json_data):
+    def read_latest_measurement(self, meter_json_data, date_to_get):
         _LOGGER.debug(f"Read latest measurement")
+
         params = (
-            ('monthOfYear', datetime.now().month),
+            ('monthOfYear', date_to_get.month),
             ('installationNumber', meter_json_data["Installation"]["InstallationNumber"]),
             ('consumerNumber', meter_json_data["Installation"]["ConsumerNumber"]),
             ('meterId', meter_json_data["MeterId"]),
@@ -109,30 +112,50 @@ class Ewii:
         
         consumption_days = self._session.get('https://selvbetjening.ewii.com/api/consumption/days', params=params)
 
+        _LOGGER.debug(f"Read latest measurement failed with status {consumption_days.status_code}")
         if consumption_days.status_code != 200:
             _LOGGER.debug(f"Read latest measurement failed with status {consumption_days.status_code}")
             return ""
 
         return json.loads(consumption_days.content)
 
-    def process_data(self, meter_type, json_data_to_process):
+    def process_data(self, meter_type, json_data_to_process, date_to_get):
         _LOGGER.debug(f"Process report for {meter_type}")
         metering_data = {}
+        data_valid = False
 
-        # Handle electricity
-        if meter_type == "Electricity":
-            _LOGGER.debug((f"{meter_type}: Process data")
-        # Handle water
-        elif meter_type == "Water":
-            _LOGGER.debug((f"{meter_type}: Process data")
+        # Find index of year
+        index_of_year = -1
+        array_of_years = json_data_to_process['Series']
+        for i in range(len(array_of_years)):
+            if array_of_years[i]['Name'] == f"{date_to_get.year}":
+                index_of_year = i
+        if index_of_year == -1: raise NotFoundErr(f"Index not found {json_data_to_process}")
+        
+        # Handle Electricity
+        if (meter_type == "Electricity"):
+            _LOGGER.debug(f"{meter_type}: Process data")
+            metering_data['electricity_value'] = (json_data_to_process['Groups'][date_to_get.day - 1]['Values'][index_of_year])
+            metering_data['electricity_unit'] = json_data_to_process['Unit']
+            data_valid = metering_data['electricity_value'] != None
+        # Handle Water
+        elif (meter_type == "Water"):
+            _LOGGER.debug(f"{meter_type}: Process data")
+            metering_data['water_value'] = (json_data_to_process['Groups'][date_to_get.day - 1]['Values'][index_of_year])
+            metering_data['water_unit'] = json_data_to_process['Unit']
+            data_valid = metering_data['water_value'] != None
         # Handle heat/other
         else:
             _LOGGER.debug(f"Not implemented {meter_type} with data {json_data_to_process}")
             raise NotImplementedError(f"Not implemented {meter_type} with data {json_data_to_process}")
 
-        raw_response = RawMeterData(meter_type, json_data_to_process, (json_data_to_process != ""))
+        # raw_response = RawMeterData(meter_type, json_data_to_process, (json_data_to_process != ""))
+        time_series = TimeSeries(data_valid, date_to_get, metering_data, "Data no ready") 
+        return time_series
 
-        return raw_response
+    def _stof(self, fstr):
+        """Convert string with ',' string float to float"""
+        return float(fstr.replace(',', '.'))
 
     # def _parse_result(self, result):
     #     '''
@@ -175,17 +198,40 @@ class Ewii:
     #     # Because we are fetching data from the full year (or so far)
     #     # The date is generated internally to be todays day of course.
     #     date = datetime.now()
+    # Fake data testing:
+#        metering_data['temp-forward'] = random.randint(0, 100)
+#        metering_data['temp-return'] = random.randint(0, 100)
+#        metering_data['temp-exp-return'] = random.randint(0, 100)
+#        metering_data['temp-cooling'] = random.randint(0, 100)
+#        metering_data['energy-start'] = random.randint(0, 100)
+#        metering_data['energy-end'] = random.randint(0, 100)
+#        metering_data['energy-used'] = random.randint(0, 100)
+#        metering_data['energy-exp-used'] = random.randint(0, 100)
+#        metering_data['energy-exp-end'] = random.randint(0, 100)
+#        metering_data['water-start'] = random.randint(0, 100)
+#        metering_data['water-end'] = random.randint(0, 100)
+#        metering_data['water-used'] = random.randint(0, 100)
+#        metering_data['water-exp-used'] = random.randint(0, 100)
+#        metering_data['water-exp-end'] = random.randint(0, 100)
+#        date = datetime.strptime("2020-01-28T14:45:12Z", '%Y-%m-%dT%H:%M:%SZ')
+
+        # time_series = TimeSeries(200, date, metering_data)
+        # parsed_result[date] = time_series
+        # _LOGGER.debug(f"Done parsing results")
+        # return parsed_result
 
     def read_latest_measurements(self):
         reports = []
         i = 0
         _LOGGER.debug(f"Generate repots")
         #  _LOGGER.debug(f"Getting latest data")
+        # Get yesterdays date
+        date_to_get = datetime.now() - timedelta(days=1)
 
         for meter in self._meters:
             # The first one is normally the active one
-            raw_measurements = self.read_latest_measurement(meter[0])
-            reports.append(self.process_data(self._meters_type[i], raw_measurements))
+            raw_measurements = self.read_latest_measurement(meter[0], date_to_get)
+            reports.append(self.process_data(self._meters_type[i], raw_measurements, date_to_get))
             i += 1
             
         return reports

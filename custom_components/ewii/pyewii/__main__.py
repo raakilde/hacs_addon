@@ -2,11 +2,13 @@
 Main for pyewii
 """
 import argparse
+from asyncio.log import logger
 import logging
 from xml.parsers.expat import model
 from ewii import Ewii
 from models import RawMeterData
 
+_LOGGER = logging.getLogger(__name__)
 
 def main():
     """
@@ -32,7 +34,7 @@ def main():
             else:
                 _LOGGER.debug(f"Error getting data. Status: {measurement.is_valid}. Error: {measurement.detailed_status}")
     except Exception as e:
-        print(e.args[0])
+        _LOGGER.error(f"Exception occuered: {e.args[0]}")
 
 def _configureLogging(args):
     if args.log:

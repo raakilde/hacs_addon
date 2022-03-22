@@ -41,15 +41,15 @@ class TimeSeries:
     Class representing a parsed time series data for a single day.
     """
 
-    def __init__(self, id_valid, data_date, metering_data, detailed_status=None):
-        self._id_valid = id_valid
+    def __init__(self, is_valid, data_date, metering_data, detailed_status=None):
+        self._is_valid = is_valid
         self._data_date = data_date
         self._metering_data = metering_data
         self._detailed_status = detailed_status
 
     @property
-    def id_valid(self):
-        return self._id_valid
+    def is_valid(self):
+        return self._is_valid
 
     @property
     def detailed_status(self):

@@ -84,6 +84,15 @@ class HassEwii:
             return self._data.data_date.date().strftime("%Y-%m-%d")
         else:
             return None
+    
+    def supports_heat(self):
+        return False
+
+    def supports_water(self):
+        return False
+
+    def supports_electricity(self):
+        return False
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):

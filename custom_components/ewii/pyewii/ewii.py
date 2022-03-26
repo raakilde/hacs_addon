@@ -128,15 +128,15 @@ class Ewii:
         # Handle Electricity
         if (meter_type == "Electricity"):
             _LOGGER.debug(f"{meter_type}: Process data")
-            metering_data['electricity_value'] = (json_data_to_process['Groups'][date_to_get.day - 1]['Values'][index_of_year])
+            metering_data['electricity_usage'] = (json_data_to_process['Groups'][date_to_get.day - 1]['Values'][index_of_year])
             metering_data['electricity_unit'] = json_data_to_process['Unit']
-            data_valid = metering_data['electricity_value'] != None
+            data_valid = metering_data['electricity_usage'] != None
         # Handle Water
         elif (meter_type == "Water"):
             _LOGGER.debug(f"{meter_type}: Process data")
-            metering_data['water_value'] = (json_data_to_process['Groups'][date_to_get.day - 1]['Values'][index_of_year])
+            metering_data['water_usage'] = (json_data_to_process['Groups'][date_to_get.day - 1]['Values'][index_of_year])
             metering_data['water_unit'] = json_data_to_process['Unit']
-            data_valid = metering_data['water_value'] != None
+            data_valid = metering_data['water_usage'] != None
         # Handle heat/other
         else:
             _LOGGER.debug(f"Not implemented {meter_type} with data {json_data_to_process}")

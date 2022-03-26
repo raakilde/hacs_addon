@@ -30,7 +30,8 @@ def main():
         for measurement in measurements:
             # The first one is normally the active one
             if measurement.is_valid == True:
-                print(f"{measurement.meter_type} is valid")
+                print(measurement.data_points)
+                # for values in measurement.data_points
             else:
                 _LOGGER.debug(f"Error getting data. Status: {measurement.is_valid}. Error: {measurement.detailed_status}")
     except Exception as e:

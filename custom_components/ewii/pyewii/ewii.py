@@ -1,14 +1,7 @@
-from argparse import ArgumentError
-from asyncio import exceptions
 from datetime import datetime, timedelta
 import json
 import logging
-from multiprocessing.dummy import Array
-from optparse import Values
-from xml.dom import NotFoundErr
-from pandas import Series
 import requests
-import logging
 from models import TimeSeries
 from models import RawMeterData
 

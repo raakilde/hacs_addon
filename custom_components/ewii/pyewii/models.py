@@ -59,6 +59,10 @@ class TimeSeries:
     def data_date(self):
         return self._data_date
 
+    @property
+    def data_points(self):
+        return self._metering_data
+
     def get_data_point(self, data_point):
         """Legal data points to ask for are:
         ['temp-forward']

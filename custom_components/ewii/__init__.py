@@ -11,7 +11,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from custom_components.ewii.pyewii.ewii import Ewii
-
 from .const import DOMAIN
 
 import requests
@@ -84,7 +83,7 @@ class HassEwii:
             return self._data.data_date.date().strftime("%Y-%m-%d")
         else:
             return None
-    
+
     def supports_heat(self):
         return False
 
@@ -101,11 +100,10 @@ class HassEwii:
         try:
             self._client.login_and_prime()
             data = self._client.read_latest_measurements()
-            # data = self._client.get_latest()
-            # if data == 200:
-            #     self._data = data
-            # else:
-            #     _LOGGER.warn(f"Error from ewii: {data.status} - {data.detailed_status}")
+            if data.is_valid:
+                self._data = data
+            else:
+                _LOGGER.warn(f"Error from ewii - data not valid")
         except requests.exceptions.HTTPError as he:
             message = None
             if he.response.status_code == 401:

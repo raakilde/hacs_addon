@@ -32,8 +32,7 @@ async def async_setup_entry(hass, config, async_add_entities):
 
     ## Sensors so far
     # Year, Month, Day? We'll fetch data once per day.
-    
-    
+
     water_series = {"usage"}
     heat_series = {"forward", "return", "exp-return", "cooling"}
     electricity_series = {"usage"}
@@ -41,12 +40,12 @@ async def async_setup_entry(hass, config, async_add_entities):
 
     for s in water_series:
         sensors.append(EwiiEnergy(f"Ewii Water {s}", s, "water", hass_ewii))
-    
-    for s in heat_series:
-        sensors.append(EwiiEnergy(f"Ewii Heat Temperature {s}", s, "temp", hass_ewii))
+
+    # for s in heat_series:
+    #     sensors.append(EwiiEnergy(f"Ewii Heat Temperature {s}", s, "temp", hass_ewii))
 
     for s in electricity_series:
-        sensors.append(EwiiEnergy(f"Ewii Electricityr {s}", s, "energy", hass_ewii))
+        sensors.append(EwiiEnergy(f"Ewii Electricity {s}", s, "electricity", hass_ewii))
 
     # TODO set on detected features
 
@@ -67,7 +66,7 @@ class EwiiEnergy(SensorEntity):
 
         self._sensor_value = f"{sensor_type}-{sensor_point}"
         self._attr_unique_id = f"ewii-{self._sensor_value}"
-        if sensor_type == "energy":
+        if sensor_type == "electricity":
             self._attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
             self._attr_icon = "mdi:lightning-bolt-circle"
             self._attr_device_class = DEVICE_CLASS_ENERGY
@@ -101,6 +100,7 @@ class EwiiEnergy(SensorEntity):
 
         self._data.update()
 
+        # self._data_date = self._data[0].data_date()
         self._data_date = self._data.get_data_date()
         self._attr_native_value = self._data.get_data(self._sensor_value)
         _LOGGER.debug(

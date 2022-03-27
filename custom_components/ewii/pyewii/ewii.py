@@ -2,8 +2,8 @@ from datetime import datetime, timedelta
 import json
 import logging
 import requests
-from models import TimeSeries
-from models import RawMeterData
+from .models import TimeSeries
+from .models import RawMeterData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -12,7 +12,7 @@ url_login = url_base + "/Login"
 url_get_address = url_base + "/api/product/GetAddressPickerViewModel"
 url_set_address = url_base + "/api/product/SetSelectedAddressPickerElement"
 url_get_install = url_base + "/api/product/GetInstallationProducts"
-url_meter =url_base + "/api/consumption/meters?utility="
+url_meter = url_base + "/api/consumption/meters?utility="
 
 # Login
 data_login = {
@@ -22,25 +22,26 @@ data_login = {
     "Password": "",
 }
 headers_login = {
-    'Content-Type': 'application/x-www-form-urlencoded',
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+    "Content-Type": "application/x-www-form-urlencoded",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
 }
 
 # Get Address
 payload_get_address = "false"
 headers_get_address = {
-    'Content-Type': 'application/json;charset=UTF-8',
+    "Content-Type": "application/json;charset=UTF-8",
 }
 
 # Set Address
 headers_set_address = {
-    'Accept': 'application/json, text/plain, */*',
-    'Content-Type': 'application/json;charset=UTF-8',
+    "Accept": "application/json, text/plain, */*",
+    "Content-Type": "application/json;charset=UTF-8",
 }
 
 # Get Installation Product
 payload_get_install = ""
 headers_get_install = ""
+
 
 class Ewii:
     """
@@ -58,110 +59,160 @@ class Ewii:
 
         # Login
         data_login["Email"] = self._email
-        data_login["Password"] = self._password 
-        response_login = self._session.post(url_login, headers=headers_login, data=data_login, allow_redirects=True)
+        data_login["Password"] = self._password
+        response_login = self._session.post(
+            url_login, headers=headers_login, data=data_login, allow_redirects=True
+        )
 
-        # Get address 
-        response_get_address = self._session.post(url_get_address, headers=headers_get_address, data=payload_get_address.encode('utf-8'))
+        # Get address
+        response_get_address = self._session.post(
+            url_get_address,
+            headers=headers_get_address,
+            data=payload_get_address.encode("utf-8"),
+        )
         # print(json.dumps(json.loads(response_get_address.content), indent=2))
 
         # Set address element
         json_get_address = json.loads(response_get_address.content)
-        elements = json_get_address['Elements']
-        index = json_get_address['SelectedId']
+        elements = json_get_address["Elements"]
+        index = json_get_address["SelectedId"]
         payload_set_address = json.dumps(elements[index])
-        response_set_address = self._session.post(url_set_address, headers=headers_set_address, data=payload_set_address.encode('utf-8'))
+        response_set_address = self._session.post(
+            url_set_address,
+            headers=headers_set_address,
+            data=payload_set_address.encode("utf-8"),
+        )
 
-        # Get Installation Product       
-        response_get_install = self._session.post(url_get_install, headers=headers_get_install, data=payload_get_install)
+        # Get Installation Product
+        response_get_install = self._session.post(
+            url_get_install, headers=headers_get_install, data=payload_get_install
+        )
         json_get_install = json.loads(response_get_install.content)
-        elements = json_get_install['Elements']
+        elements = json_get_install["Elements"]
 
         # Detect installation
         for product in elements:
-            self._meters_type.append(product['ProductTypeName'])
-            response = self._session.get(url_meter + product['ProductTypeName'])
+            self._meters_type.append(product["ProductTypeName"])
+            response = self._session.get(url_meter + product["ProductTypeName"])
             self._meters.append(json.loads(response.content))
 
-        return  response_login.status_code          ==  200 and \
-                response_get_address.status_code    ==  200 and \
-                response_set_address.status_code    ==  204 and \
-                response_get_install.status_code    ==  200
+        return (
+            response_login.status_code == 200
+            and response_get_address.status_code == 200
+            and response_set_address.status_code == 204
+            and response_get_install.status_code == 200
+        )
 
     def read_latest_measurement(self, meter_json_data, date_to_get):
         _LOGGER.debug(f"Read latest measurement")
 
         params = (
-            ('monthOfYear', date_to_get.month),
-            ('installationNumber', meter_json_data["Installation"]["InstallationNumber"]),
-            ('consumerNumber', meter_json_data["Installation"]["ConsumerNumber"]),
-            ('meterId', meter_json_data["MeterId"]),
-            ('counterId', meter_json_data["CounterId"]),
-            ('type', meter_json_data["ReadingType"]),
-            ('utility', meter_json_data["Utility"]),
-            ('unit', meter_json_data["Unit"]),
-            ('factoryNumber', meter_json_data["FactoryNumber"]),
+            ("monthOfYear", date_to_get.month),
+            (
+                "installationNumber",
+                meter_json_data["Installation"]["InstallationNumber"],
+            ),
+            ("consumerNumber", meter_json_data["Installation"]["ConsumerNumber"]),
+            ("meterId", meter_json_data["MeterId"]),
+            ("counterId", meter_json_data["CounterId"]),
+            ("type", meter_json_data["ReadingType"]),
+            ("utility", meter_json_data["Utility"]),
+            ("unit", meter_json_data["Unit"]),
+            ("factoryNumber", meter_json_data["FactoryNumber"]),
         )
-        
-        consumption_days = self._session.get('https://selvbetjening.ewii.com/api/consumption/days', params=params)
 
-        _LOGGER.debug(f"Read latest measurement failed with status {consumption_days.status_code}")
+        consumption_days = self._session.get(
+            "https://selvbetjening.ewii.com/api/consumption/days", params=params
+        )
+
+        _LOGGER.debug(
+            f"Read latest measurement failed with status {consumption_days.status_code}"
+        )
         if consumption_days.status_code != 200:
-            _LOGGER.debug(f"Read latest measurement failed with status {consumption_days.status_code}")
+            _LOGGER.debug(
+                f"Read latest measurement failed with status {consumption_days.status_code}"
+            )
             return ""
 
         return json.loads(consumption_days.content)
 
     def process_data(self, meter_type, json_data_to_process, date_to_get):
         _LOGGER.debug(f"Process report for {meter_type}")
-        metering_data = {}
+        metering_data = dict()
         data_valid = False
 
         # Find index of year
         index_of_year = -1
-        array_of_years = json_data_to_process['Series']
+        array_of_years = json_data_to_process["Series"]
         for i in range(len(array_of_years)):
-            if array_of_years[i]['Name'] == f"{date_to_get.year}":
+            if array_of_years[i]["Name"] == f"{date_to_get.year}":
                 index_of_year = i
-        if index_of_year == -1: raise NotFoundErr(f"Index not found {json_data_to_process}")
-        
+
+        if index_of_year == -1:
+            # raise NotFoundErr(f"Index not found {json_data_to_process}")
+            return metering_data
+
         # Handle Electricity
-        if (meter_type == "Electricity"):
+        if meter_type == "Electricity":
             _LOGGER.debug(f"{meter_type}: Process data")
-            metering_data['electricity_usage'] = (json_data_to_process['Groups'][date_to_get.day - 1]['Values'][index_of_year])
-            metering_data['electricity_unit'] = json_data_to_process['Unit']
-            data_valid = metering_data['electricity_usage'] != None
+            metering_data["electricity-usage"] = float(
+                json_data_to_process["Groups"][date_to_get.day - 1]["Values"][
+                    index_of_year
+                ]
+            )
+            metering_data["electricity-unit"] = json_data_to_process["Unit"]
+            data_valid = metering_data["electricity-usage"] != None
         # Handle Water
-        elif (meter_type == "Water"):
+        elif meter_type == "Water":
             _LOGGER.debug(f"{meter_type}: Process data")
-            metering_data['water_usage'] = (json_data_to_process['Groups'][date_to_get.day - 1]['Values'][index_of_year])
-            metering_data['water_unit'] = json_data_to_process['Unit']
-            data_valid = metering_data['water_usage'] != None
+            metering_data["water-usage"] = float(
+                json_data_to_process["Groups"][date_to_get.day - 1]["Values"][
+                    index_of_year
+                ]
+            )
+            metering_data["water-unit"] = json_data_to_process["Unit"]
+            data_valid = metering_data["water-usage"] != None
         # Handle heat/other
         else:
-            _LOGGER.debug(f"Not implemented {meter_type} with data {json_data_to_process}")
-            raise NotImplementedError(f"Not implemented {meter_type} with data {json_data_to_process}")
+            _LOGGER.debug(
+                f"Not implemented {meter_type} with data {json_data_to_process}"
+            )
+            raise NotImplementedError(
+                f"Not implemented {meter_type} with data {json_data_to_process}"
+            )
 
         # raw_response = RawMeterData(meter_type, json_data_to_process, (json_data_to_process != ""))
-        time_series = TimeSeries(data_valid, date_to_get, metering_data, "Data no ready") 
-        return time_series
+        # time_series = TimeSeries(
+        #     data_valid, date_to_get, metering_data, "Data no ready"
+        # )
+        if data_valid is False:
+            metering_data.clear()
+
+        return metering_data
 
     def _stof(self, fstr):
         """Convert string with ',' string float to float"""
-        return float(fstr.replace(',', '.'))
+        return float(fstr.replace(",", "."))
 
     def read_latest_measurements(self):
-        reports = []
         i = 0
+        reports = dict()
         _LOGGER.debug(f"Generate repots")
         #  _LOGGER.debug(f"Getting latest data")
         # Get yesterdays date
         date_to_get = datetime.now() - timedelta(days=1)
+        time_series = TimeSeries(True, date_to_get, "", "")
 
         for meter in self._meters:
             # The first one is normally the active one
             raw_measurements = self.read_latest_measurement(meter[0], date_to_get)
-            reports.append(self.process_data(self._meters_type[i], raw_measurements, date_to_get))
+            measurements = self.process_data(
+                self._meters_type[i], raw_measurements, date_to_get
+            )
+            if len(measurements) > 0:
+                reports.update(measurements)
             i += 1
-            
-        return reports
+
+        time_series = TimeSeries((len(reports) > 0), date_to_get, reports)
+
+        return time_series

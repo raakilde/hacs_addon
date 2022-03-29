@@ -183,28 +183,28 @@ class Ewii:
         elif meter_type == "Heat":
             _LOGGER.debug(f"{meter_type}: Process data")
             # Must be 2 tables for heat MWh and m3
-            metering_data["energy-usage"] = float(
+            metering_data["heat-energy-usage"] = float(
                 json_data_to_process[0]["Groups"][date_to_get.day - 1]["Values"][
                     index_of_year
                 ]
             )
-            metering_data["energy-usage-unit"] = json_data_to_process[0]["Unit"]
+            metering_data["heat-energy-usage-unit"] = json_data_to_process[0]["Unit"]
 
-            metering_data["water-usage"] = float(
+            metering_data["heat-water-usage"] = float(
                 json_data_to_process[1]["Groups"][date_to_get.day - 1]["Values"][
                     index_of_year
                 ]
             )
             # Bug in time table always showing MWh
-            metering_data["water-usage-unit"] = "m3"
+            metering_data["heat-water-usage-unit"] = "m3"
 
             # Forbrug MWh divideret med forbrug m³) x 860.
-            metering_data["water_temperature_cooling"] = (metering_data["energy-usage"] / metering_data["water-usage"]) * 860
-            metering_data["energy-unit"] = "C"
+            metering_data["heat-water-temperature-cooling"] = (metering_data["energy-usage"] / metering_data["water-usage"]) * 860
+            metering_data["heat-water-temperature-cooling-unit"] = "C"
             
 
             data_valid = metering_data["water-usage"] != None
-        # Handle heat/other
+        # Handle other
         else:
             _LOGGER.debug(
                 f"Not implemented {meter_type} with data {json_data_to_process}"

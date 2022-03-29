@@ -12,9 +12,7 @@ from homeassistant.const import (
 )
 from homeassistant.components.sensor import (
     SensorEntity,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL,
-    STATE_CLASS_TOTAL_INCREASING,
+    STATE_CLASS_MEASUREMENT
 )
 
 # from homeassistant.helpers.entity import Entity
@@ -34,15 +32,15 @@ async def async_setup_entry(hass, config, async_add_entities):
     # Year, Month, Day? We'll fetch data once per day.
 
     water_series = {"usage"}
-    heat_series = {"forward", "return", "exp-return", "cooling"}
+    heat_series = {"energy-usage", "water-usage", "water-temperature-cooling"}
     electricity_series = {"usage"}
     sensors = []
 
     for s in water_series:
         sensors.append(EwiiEnergy(f"Ewii Water {s}", s, "water", hass_ewii))
 
-    # for s in heat_series:
-    #     sensors.append(EwiiEnergy(f"Ewii Heat Temperature {s}", s, "temp", hass_ewii))
+    for s in heat_series:
+        sensors.append(EwiiEnergy(f"Ewii Heat {s}", s, "heat", hass_ewii))
 
     for s in electricity_series:
         sensors.append(EwiiEnergy(f"Ewii Electricity {s}", s, "electricity", hass_ewii))
@@ -78,6 +76,24 @@ class EwiiEnergy(SensorEntity):
             self._attr_state_class = STATE_CLASS_MEASUREMENT  # STATE_CLASS_TOTAL
             # Only gas can be measured in m3
             self._attr_device_class = DEVICE_CLASS_GAS
+        elif sensor_type == "heat":
+            # m3
+            if sensor_type.find("energy"):
+                self._attr_native_unit_of_measurement = VOLUME_CUBIC_METERS
+                self._attr_icon = "mdi:thermometer"
+                self._attr_state_class = STATE_CLASS_MEASUREMENT  # STATE_CLASS_TOTAL
+                # Only gas can be measured in m3
+                self._attr_device_class = DEVICE_CLASS_GAS
+            elif sensor_type.find("water"):
+                self._attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+                self._attr_icon = "mdi:thermometer"
+                self._attr_state_class = STATE_CLASS_MEASUREMENT  # STATE_CLASS_TOTAL
+                self._attr_device_class = DEVICE_CLASS_TEMPERATURE
+            else:
+                self._attr_native_unit_of_measurement = TEMP_CELSIUS
+                self._attr_icon = "mdi:thermometer"
+                self._attr_device_class = DEVICE_CLASS_TEMPERATURE
+                self._attr_state_class = STATE_CLASS_MEASUREMENT
         else:
             self._attr_native_unit_of_measurement = TEMP_CELSIUS
             self._attr_icon = "mdi:thermometer"

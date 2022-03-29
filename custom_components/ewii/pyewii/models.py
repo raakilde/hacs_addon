@@ -61,28 +61,11 @@ class TimeSeries:
     def data_date(self):
         return self._data_date
 
-    @property
-    def data_points(self):
-        return self._metering_data
-
     def data_points_append(self, metering_data):
         self._metering_data.append(metering_data)
 
     def get_data_point(self, data_point):
-        """Legal data points to ask for are:
-        ['temp-forward']
-        ['temp-return']
-        ['temp-exp-return']
-        ['temp-cooling']
-        ['energy-start']
-        ['energy-end']
-        ['energy-used']
-        ['energy-exp-used']
-        ['energy-exp-end']
-        ['water-start']
-        ['water-end']
-        ['water-used']
-        ['water-exp-used']
-        ['water-exp-end']
-        """
-        return self._metering_data[data_point]
+        try:
+            return self._metering_data[data_point]
+        except:
+            return None

@@ -8,12 +8,10 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_GAS,
     ENERGY_KILO_WATT_HOUR,
+    ENERGY_MEGA_WATT_HOUR,
     VOLUME_CUBIC_METERS,
 )
-from homeassistant.components.sensor import (
-    SensorEntity,
-    STATE_CLASS_MEASUREMENT
-)
+from homeassistant.components.sensor import SensorEntity, STATE_CLASS_MEASUREMENT
 
 # from homeassistant.helpers.entity import Entity
 from custom_components.ewii.pyewii.ewii import Ewii
@@ -36,18 +34,18 @@ async def async_setup_entry(hass, config, async_add_entities):
     electricity_series = {"usage"}
     sensors = []
 
+    # if hass_ewii.supports_water():
     for s in water_series:
         sensors.append(EwiiEnergy(f"Ewii Water {s}", s, "water", hass_ewii))
 
+    # if hass_ewii.supports_heat():
     for s in heat_series:
         sensors.append(EwiiEnergy(f"Ewii Heat {s}", s, "heat", hass_ewii))
 
+    # if hass_ewii.supports_electricity():
     for s in electricity_series:
         sensors.append(EwiiEnergy(f"Ewii Electricity {s}", s, "electricity", hass_ewii))
 
-    # TODO set on detected features
-
-    # sensors.append(EwiiEnergy("", "", ewii))
     async_add_entities(sensors)
 
 
@@ -77,23 +75,22 @@ class EwiiEnergy(SensorEntity):
             # Only gas can be measured in m3
             self._attr_device_class = DEVICE_CLASS_GAS
         elif sensor_type == "heat":
-            # m3
-            if sensor_type.find("energy"):
+            if "cooling" in sensor_point:
+                self._attr_native_unit_of_measurement = TEMP_CELSIUS
+                self._attr_icon = "mdi:thermometer"
+                self._attr_device_class = DEVICE_CLASS_TEMPERATURE
+                self._attr_state_class = STATE_CLASS_MEASUREMENT
+            elif "energy" in sensor_point:
+                self._attr_native_unit_of_measurement = ENERGY_MEGA_WATT_HOUR
+                self._attr_icon = "mdi:thermometer"
+                self._attr_state_class = STATE_CLASS_MEASUREMENT  # STATE_CLASS_TOTAL
+                self._attr_device_class = DEVICE_CLASS_ENERGY
+            elif "water" in sensor_point:
                 self._attr_native_unit_of_measurement = VOLUME_CUBIC_METERS
                 self._attr_icon = "mdi:thermometer"
                 self._attr_state_class = STATE_CLASS_MEASUREMENT  # STATE_CLASS_TOTAL
                 # Only gas can be measured in m3
                 self._attr_device_class = DEVICE_CLASS_GAS
-            elif sensor_type.find("water"):
-                self._attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
-                self._attr_icon = "mdi:thermometer"
-                self._attr_state_class = STATE_CLASS_MEASUREMENT  # STATE_CLASS_TOTAL
-                self._attr_device_class = DEVICE_CLASS_TEMPERATURE
-            else:
-                self._attr_native_unit_of_measurement = TEMP_CELSIUS
-                self._attr_icon = "mdi:thermometer"
-                self._attr_device_class = DEVICE_CLASS_TEMPERATURE
-                self._attr_state_class = STATE_CLASS_MEASUREMENT
         else:
             self._attr_native_unit_of_measurement = TEMP_CELSIUS
             self._attr_icon = "mdi:thermometer"

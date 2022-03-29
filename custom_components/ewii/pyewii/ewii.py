@@ -93,7 +93,10 @@ class Ewii:
         # Detect installation
         for product in elements:
             # Must be owned by user and should not be Internet
-            if product['Product']['CurrentlyOwned'] and product["ProductTypeName"] != 'Internet':
+            if (
+                product["Product"]["CurrentlyOwned"]
+                and product["ProductTypeName"] != "Internet"
+            ):
                 self._meters_type.append(product["ProductTypeName"])
                 response = self._session.get(url_meter + product["ProductTypeName"])
                 self._meters.append(json.loads(response.content))
@@ -104,6 +107,15 @@ class Ewii:
             and response_set_address.status_code == 204
             and response_get_install.status_code == 200
         )
+
+    def has_water_support(self):
+        return self._meters_type.index("water") != -1
+
+    def has_electricity_support(self):
+        return self._meters_type.index("electricity") != -1
+
+    def has_heat_support(self):
+        return self._meters_type.index("heat") != -1
 
     def read_latest_measurement(self, meters_json_data, date_to_get):
         _LOGGER.debug(f"Read latest measurement")
@@ -136,8 +148,7 @@ class Ewii:
                 _LOGGER.debug(
                     f"Read latest measurement failed with status {consumption_days.status_code}"
                 )
-                
-            else 
+            else:
                 consumption_days_json_list.append(json.loads(consumption_days.content))
 
         return consumption_days_json_list
@@ -199,11 +210,12 @@ class Ewii:
             metering_data["heat-water-usage-unit"] = "m3"
 
             # Forbrug MWh divideret med forbrug m³) x 860.
-            metering_data["heat-water-temperature-cooling"] = (metering_data["energy-usage"] / metering_data["water-usage"]) * 860
+            metering_data["heat-water-temperature-cooling"] = (
+                metering_data["heat-energy-usage"] / metering_data["heat-water-usage"]
+            ) * 860
             metering_data["heat-water-temperature-cooling-unit"] = "C"
-            
 
-            data_valid = metering_data["water-usage"] != None
+            data_valid = metering_data["heat-water-usage"] != None
         # Handle other
         else:
             _LOGGER.debug(
@@ -221,9 +233,9 @@ class Ewii:
     def _find_active_meters(self, meter_types):
         active_meter_types = []
         for meter_type in meter_types:
-            if meter_type["Status"] == 'aktiv':
+            if meter_type["Status"] == "aktiv":
                 active_meter_types.append(meter_type)
-        
+
         return active_meter_types
 
     def read_latest_measurements(self):
@@ -238,7 +250,9 @@ class Ewii:
         for meter in self._meters:
             # Find all active type meters
             active_meter_types = self._find_active_meters(meter)
-            raw_measurements = self.read_latest_measurement(active_meter_types, date_to_get)
+            raw_measurements = self.read_latest_measurement(
+                active_meter_types, date_to_get
+            )
             measurements = self.process_data(
                 self._meters_type[i], raw_measurements, date_to_get
             )

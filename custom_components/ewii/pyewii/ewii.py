@@ -92,9 +92,11 @@ class Ewii:
 
         # Detect installation
         for product in elements:
-            self._meters_type.append(product["ProductTypeName"])
-            response = self._session.get(url_meter + product["ProductTypeName"])
-            self._meters.append(json.loads(response.content))
+            # Must be owned by user and should not be Internet
+            if product['Product']['CurrentlyOwned'] and product["ProductTypeName"] != 'Internet':
+                self._meters_type.append(product["ProductTypeName"])
+                response = self._session.get(url_meter + product["ProductTypeName"])
+                self._meters.append(json.loads(response.content))
 
         return (
             response_login.status_code == 200
@@ -103,38 +105,42 @@ class Ewii:
             and response_get_install.status_code == 200
         )
 
-    def read_latest_measurement(self, meter_json_data, date_to_get):
+    def read_latest_measurement(self, meters_json_data, date_to_get):
         _LOGGER.debug(f"Read latest measurement")
+        consumption_days_json_list = []
 
-        params = (
-            ("monthOfYear", date_to_get.month),
-            (
-                "installationNumber",
-                meter_json_data["Installation"]["InstallationNumber"],
-            ),
-            ("consumerNumber", meter_json_data["Installation"]["ConsumerNumber"]),
-            ("meterId", meter_json_data["MeterId"]),
-            ("counterId", meter_json_data["CounterId"]),
-            ("type", meter_json_data["ReadingType"]),
-            ("utility", meter_json_data["Utility"]),
-            ("unit", meter_json_data["Unit"]),
-            ("factoryNumber", meter_json_data["FactoryNumber"]),
-        )
+        for meter_json_data in meters_json_data:
+            params = (
+                ("monthOfYear", date_to_get.month),
+                (
+                    "installationNumber",
+                    meter_json_data["Installation"]["InstallationNumber"],
+                ),
+                ("consumerNumber", meter_json_data["Installation"]["ConsumerNumber"]),
+                ("meterId", meter_json_data["MeterId"]),
+                ("counterId", meter_json_data["CounterId"]),
+                ("type", meter_json_data["ReadingType"]),
+                ("utility", meter_json_data["Utility"]),
+                ("unit", meter_json_data["Unit"]),
+                ("factoryNumber", meter_json_data["FactoryNumber"]),
+            )
 
-        consumption_days = self._session.get(
-            "https://selvbetjening.ewii.com/api/consumption/days", params=params
-        )
+            consumption_days = self._session.get(
+                "https://selvbetjening.ewii.com/api/consumption/days", params=params
+            )
 
-        _LOGGER.debug(
-            f"Read latest measurement failed with status {consumption_days.status_code}"
-        )
-        if consumption_days.status_code != 200:
             _LOGGER.debug(
                 f"Read latest measurement failed with status {consumption_days.status_code}"
             )
-            return ""
+            if consumption_days.status_code != 200:
+                _LOGGER.debug(
+                    f"Read latest measurement failed with status {consumption_days.status_code}"
+                )
+                
+            else 
+                consumption_days_json_list.append(json.loads(consumption_days.content))
 
-        return json.loads(consumption_days.content)
+        return consumption_days_json_list
 
     def process_data(self, meter_type, json_data_to_process, date_to_get):
         _LOGGER.debug(f"Process report for {meter_type}")
@@ -143,7 +149,7 @@ class Ewii:
 
         # Find index of year
         index_of_year = -1
-        array_of_years = json_data_to_process["Series"]
+        array_of_years = json_data_to_process[0]["Series"]
         for i in range(len(array_of_years)):
             if array_of_years[i]["Name"] == f"{date_to_get.year}":
                 index_of_year = i
@@ -155,22 +161,48 @@ class Ewii:
         # Handle Electricity
         if meter_type == "Electricity":
             _LOGGER.debug(f"{meter_type}: Process data")
+            # Only one time table in electricity
             metering_data["electricity-usage"] = float(
-                json_data_to_process["Groups"][date_to_get.day - 1]["Values"][
+                json_data_to_process[0]["Groups"][date_to_get.day - 1]["Values"][
                     index_of_year
                 ]
             )
-            metering_data["electricity-unit"] = json_data_to_process["Unit"]
+            metering_data["electricity-unit"] = json_data_to_process[0]["Unit"]
             data_valid = metering_data["electricity-usage"] != None
         # Handle Water
         elif meter_type == "Water":
             _LOGGER.debug(f"{meter_type}: Process data")
+            # Only one time table in water
             metering_data["water-usage"] = float(
-                json_data_to_process["Groups"][date_to_get.day - 1]["Values"][
+                json_data_to_process[0]["Groups"][date_to_get.day - 1]["Values"][
                     index_of_year
                 ]
             )
-            metering_data["water-unit"] = json_data_to_process["Unit"]
+            metering_data["water-unit"] = json_data_to_process[0]["Unit"]
+            data_valid = metering_data["water-usage"] != None
+        elif meter_type == "Heat":
+            _LOGGER.debug(f"{meter_type}: Process data")
+            # Must be 2 tables for heat MWh and m3
+            metering_data["energy-usage"] = float(
+                json_data_to_process[0]["Groups"][date_to_get.day - 1]["Values"][
+                    index_of_year
+                ]
+            )
+            metering_data["energy-usage-unit"] = json_data_to_process[0]["Unit"]
+
+            metering_data["water-usage"] = float(
+                json_data_to_process[1]["Groups"][date_to_get.day - 1]["Values"][
+                    index_of_year
+                ]
+            )
+            # Bug in time table always showing MWh
+            metering_data["water-usage-unit"] = "m3"
+
+            # Forbrug MWh divideret med forbrug m³) x 860.
+            metering_data["water_temperature_cooling"] = (metering_data["energy-usage"] / metering_data["water-usage"]) * 860
+            metering_data["energy-unit"] = "C"
+            
+
             data_valid = metering_data["water-usage"] != None
         # Handle heat/other
         else:
@@ -181,18 +213,18 @@ class Ewii:
                 f"Not implemented {meter_type} with data {json_data_to_process}"
             )
 
-        # raw_response = RawMeterData(meter_type, json_data_to_process, (json_data_to_process != ""))
-        # time_series = TimeSeries(
-        #     data_valid, date_to_get, metering_data, "Data no ready"
-        # )
         if data_valid is False:
             metering_data.clear()
 
         return metering_data
 
-    def _stof(self, fstr):
-        """Convert string with ',' string float to float"""
-        return float(fstr.replace(",", "."))
+    def _find_active_meters(self, meter_types):
+        active_meter_types = []
+        for meter_type in meter_types:
+            if meter_type["Status"] == 'aktiv':
+                active_meter_types.append(meter_type)
+        
+        return active_meter_types
 
     def read_latest_measurements(self):
         i = 0
@@ -204,8 +236,9 @@ class Ewii:
         time_series = TimeSeries(True, date_to_get, "", "")
 
         for meter in self._meters:
-            # The first one is normally the active one
-            raw_measurements = self.read_latest_measurement(meter[0], date_to_get)
+            # Find all active type meters
+            active_meter_types = self._find_active_meters(meter)
+            raw_measurements = self.read_latest_measurement(active_meter_types, date_to_get)
             measurements = self.process_data(
                 self._meters_type[i], raw_measurements, date_to_get
             )

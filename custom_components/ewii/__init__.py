@@ -28,6 +28,7 @@ PLATFORMS = ["sensor"]
 # MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 MIN_TIME_BETWEEN_UPDATES = timedelta(hours=6)
 
+
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Ewii component."""
     hass.data[DOMAIN] = {}
@@ -84,14 +85,17 @@ class HassEwii:
         else:
             return None
 
-    def supports_heat(self):
-        return False
+    # def supports_heat(self):
+    #     self._client.login_and_prime()
+    #     return self._client.has_water_support()
 
-    def supports_water(self):
-        return False
+    # def supports_water(self):
+    #     self._client.login_and_prime()
+    #     return self._client.has_water_support()
 
-    def supports_electricity(self):
-        return False
+    # def supports_electricity(self):
+    #     self._client.login_and_prime()
+    #     return self._client.has_electricity_support()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):

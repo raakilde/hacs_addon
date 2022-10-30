@@ -5,7 +5,9 @@
   "config_flow": true,
   "documentation": "https://github.com/raakilde/hacs_addon",
   "issue_tracker": "https://github.com/raakilde/hacs_addon/issues",
-  "requirements": [],
+  "requirements": [
+    "requests==2.28.1"
+  ],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},

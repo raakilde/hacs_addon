@@ -1,7 +1,7 @@
 {
   "domain": "ewii",
   "name": "Ewii",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "config_flow": true,
   "documentation": "https://github.com/raakilde/hacs_addon",
   "issue_tracker": "https://github.com/raakilde/hacs_addon/issues",

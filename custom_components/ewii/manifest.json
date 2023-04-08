@@ -6,7 +6,7 @@
   "documentation": "https://github.com/raakilde/hacs_addon",
   "issue_tracker": "https://github.com/raakilde/hacs_addon/issues",
   "requirements": [
-    "requests==2.28.1"
+    "requests==2.28.2"
   ],
   "ssdp": [],
   "zeroconf": [],
